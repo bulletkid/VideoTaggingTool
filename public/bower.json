@@ -25,7 +25,7 @@
     "underscore": "~1.8.3",
     "bootstrap-tokenfield": "~0.12.1",
     "jquery-ui": "~1.11.4",
-    "percepto-video-tagging": "~0.0.37"
+    "percepto-video-tagging": "~0.0.38"
   },
   "resolutions": {
     "bootstrap": "~3.3.6",

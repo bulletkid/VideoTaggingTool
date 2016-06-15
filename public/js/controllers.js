@@ -482,7 +482,12 @@ videoTaggingAppControllers
             })
             .error(function (err) {
                 console.error('error', err);
-                $scope.showError('error saving frame: ' + err.message || '');
+                if (confirm("An error accurd when trying to save rectangle!!! press ok or cancel will reload the page, then you can start again from the last frame that is tagged") == true) {
+                    window.location.reload(true);
+                } else {
+                    window.location.reload(true);
+                }
+                $scope.showError('error saving frame: ' );
             });
         }
 

@@ -27,5 +27,6 @@ build/Release
 node_modules
 public/bower_components
 
+.idea
 # secrets
 *.private.json

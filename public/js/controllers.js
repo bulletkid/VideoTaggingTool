@@ -483,6 +483,7 @@ videoTaggingAppControllers
             .error(function (err) {
                 console.error('error', err);
                 $scope.showError('error saving frame: ' + err.message || '');
+                if(videoCtrl) videoCtrl.fire('regionsavefail', {frameIndex: inputObject.frameIndex, regions: inputObject.regions, editedRegionId: inputObject.editedRegion});
             });
         }
 

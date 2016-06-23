@@ -6,6 +6,14 @@ var db = require('../storage/db');
 var blob = require('../storage/blob');
 
 module.exports = function () {
+
+//    router.post('/logs', EditorLoggedIn, function (req, res) {
+//        req.body.createdById = req.user.Id;
+//        db.createOrModifyJob(req.body, function (err, result) {
+//            if (err) return logError(err, res);
+//            res.json(result);
+//        });
+//    });
  
     router.post('/jobs', AdminLoggedIn, function (req, res) {
         req.body.createdById = req.user.Id;

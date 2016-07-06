@@ -4,9 +4,9 @@ var videoTaggingAppControllers = angular.module('videoTaggingAppControllers', []
 videoTaggingAppControllers
 
 .factory('state', ['$http', '$rootScope', function ($http, $rootScope) {
-    
+
     var jobStatus = {};
-    
+
     $http({ method: 'GET', url: '/api/jobs/statuses' })
         .success(function (result) {
             console.log('got statuses', result);
@@ -17,7 +17,7 @@ videoTaggingAppControllers
     .error(function (err) {
         console.error(err);
     });
-        
+
     $rootScope.jobSetup = {
         regionTypes: { values: ['Rectangle', 'Point'], default: 'Rectangle' },
         multiRegions: { values: [{ id: '0', name: 'False' }, { id: '1', name: 'True' }], default: '1' },
@@ -62,7 +62,7 @@ videoTaggingAppControllers
         $scope.logout = function (){
             $rootScope.user = user;
         }
-        
+
         $scope.$route = $route;
 
         $rootScope.ajaxStart = function() {
@@ -98,11 +98,11 @@ videoTaggingAppControllers
             $scope.jobStatuses = result.statuses;
             $scope.ajaxCompleted();
         });
-        
+
         var jobs;
 
         getJobsFromServer('/api/users/' + $scope.user.Id + '/jobs');
-        
+
         function getJobsFromServer(url) {
             console.log('getting jobs', url);
 
@@ -114,7 +114,7 @@ videoTaggingAppControllers
                 $scope.ajaxCompleted();
             })
         }
-        
+
         function filterFetch(filter) {
             console.log('filter', filter);
             switch (filter) {
@@ -125,24 +125,24 @@ videoTaggingAppControllers
                     getJobsFromServer('/api/users/' + $scope.user.Id + '/jobs');
             }
         }
-        
+
         $scope.filterFetch = function (filter) {
             $scope.btnMeOrAll = filter;
             filterFetch(filter);
             console.log(this);
         }
-        
+
         $scope.filter = function (status) {
             $scope.btnStatus = status;
             _filter(status);
         }
-        
+
         function _filter(status) {
             $scope.jobs = jobs.filter(function (job) {
                 return status==='all' || job.StatusName == status;
             });
         }
-        
+
         $scope.count = function (status) {
             return jobs && jobs.filter(function (job) {
                 return !status || job.StatusId == status;
@@ -167,7 +167,7 @@ videoTaggingAppControllers
             $location.path('/jobs/' + jobId + '/tag');
         }
     }])
-    
+
 .controller('UpsertJobController', ['$scope', '$http', '$location', '$routeParams', 'state', function ($scope, $http, $location, $routeParams, state) {
 
         $scope.clearMessages();
@@ -190,7 +190,7 @@ videoTaggingAppControllers
                 $scope.selectedStatus = { Id: result.job.StatusId };
                 console.log(' $scope.selectedStatus', $scope.selectedStatus);
                 $scope.description = result.job.Description;
-                
+
                 $scope.config = result.job.Config;
                 $scope.regiontype = result.job.Config.regiontype;
                 $scope.multiregions = result.job.Config.multiregions;
@@ -234,7 +234,7 @@ videoTaggingAppControllers
         });
 
         $scope.submit = function () {
-            
+
             $scope.clearMessages();
 
             if(!$scope.selectedVideo || !$scope.selectedVideo.Id) return $scope.showError('video was not provided');
@@ -254,7 +254,7 @@ videoTaggingAppControllers
                     regiontype: $scope.regiontype,
                     multiregions: $scope.multiregions,
                     regionsize: $scope.regionsize,
-                    tags: ($scope.tags && $scope.tags.split(',').map(function (tag) { return tag.trim(); })) || ''
+                    : ($scope.tags && $scope.tags.split(',').map(function (tag) { return tag.trim(); })) || ''
                 }
             };
 
@@ -265,7 +265,7 @@ videoTaggingAppControllers
             if ($scope.jobId != defaultId) {
                 data.id = $scope.jobId;
             }
-            
+
             console.log('submitting', data);
 
             $scope.ajaxStart();
@@ -289,7 +289,7 @@ videoTaggingAppControllers
         $scope.clearMessages();
         var defaultId = -1;
         $scope.userId = defaultId;
-        
+
         if ($routeParams.id != 0) {
             $scope.ajaxStart();
             $http({ method: 'GET', url: '/api/users/' + $routeParams.id })
@@ -311,8 +311,8 @@ videoTaggingAppControllers
             $scope.roles = result.roles;
             $scope.ajaxCompleted();
         });
-        
-        
+
+
         $scope.submit = function () {
 
             $scope.clearMessages();
@@ -326,11 +326,11 @@ videoTaggingAppControllers
                 email: $scope.email,
                 roleId: $scope.selectedRole.Id
             };
-            
+
             if ($scope.userId != defaultId) {
                 data.id = $scope.userId;
             }
-            
+
             console.log('submitting', data);
             $scope.ajaxStart();
             $http({ method: 'POST', url: '/api/users', data: data })
@@ -347,7 +347,7 @@ videoTaggingAppControllers
             });
         }
     }])
-    
+
 
 .controller('VideosController', ['$scope', '$route', '$http', '$location', '$routeParams', function ($scope, $route, $http, $location, $routeParams) {
 
@@ -483,7 +483,12 @@ videoTaggingAppControllers
             .error(function (err) {
                 console.error('error', err);
                 $scope.showError('error saving frame: ' + err.message || '');
-                if(videoCtrl) videoCtrl.fire('regionsavefail', {frameIndex: inputObject.frameIndex, regions: inputObject.regions, editedRegionId: inputObject.editedRegion});
+                if (confirm("An error accurd when trying to save rectangle!!! press ok or cancel will reload the page, then you can start again from the last frame that is tagged") == true) {
+                   window.location.reload(true);
+               } else {
+                   window.location.reload(true);
+               }
+                //if(videoCtrl) videoCtrl.fire('regionsavefail', {frameIndex: inputObject.frameIndex, regions: inputObject.regions, editedRegionId: inputObject.editedRegion});
             });
         }
 
@@ -495,7 +500,7 @@ videoTaggingAppControllers
     }])
 
 .controller('UpsertVideoController', ['$scope', '$http', '$location', '$routeParams', function ($scope, $http, $location, $routeParams) {
-        
+
         var defaultId = -1;
 
         $scope.videoId = defaultId;
@@ -532,7 +537,7 @@ videoTaggingAppControllers
             $http({ method: 'GET', url: '/api/videos/' + $routeParams.id })
             .success(function (video) {
                 console.log('video', video);
-               
+
                 $scope.videoId = video.Id;
                 $scope.name = video.Name;
                 $scope.url = video.Url;
@@ -557,7 +562,7 @@ videoTaggingAppControllers
         }
 
         $scope.submit = function () {
-            
+
             $scope.clearMessages();
 
             if(!$scope.name) return $scope.showError('name was not provided');
@@ -577,11 +582,11 @@ videoTaggingAppControllers
                 framesPerSecond: $scope.framesPerSecond,
                 labels: labels
             };
-            
+
             if ($scope.videoId != defaultId) {
                 data.id = $scope.videoId;
             }
-            
+
             console.log('submitting', data);
 
             $scope.ajaxStart();
@@ -598,8 +603,8 @@ videoTaggingAppControllers
                     $scope.ajaxCompleted();
             });
         }
-        
-        
+
+
         $scope.submitVideo = function () {
           $scope.clearMessages();
           var file = document.getElementById('inputFile').files[0];

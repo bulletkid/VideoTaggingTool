@@ -254,7 +254,7 @@ videoTaggingAppControllers
                     regiontype: $scope.regiontype,
                     multiregions: $scope.multiregions,
                     regionsize: $scope.regionsize,
-                    : ($scope.tags && $scope.tags.split(',').map(function (tag) { return tag.trim(); })) || ''
+                    tags: ($scope.tags && $scope.tags.split(',').map(function (tag) { return tag.trim(); })) || ''
                 }
             };
 

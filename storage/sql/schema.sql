@@ -149,7 +149,7 @@ CREATE TABLE [dbo].[Videos](
 	[Name] [nvarchar](100) NOT NULL,
 	[Width] [int] NOT NULL,
 	[Height] [int] NOT NULL,
-	[DurationSeconds] [real] NOT NULL,
+	[FramesNum] [real] NOT NULL,
 	[FramesPerSecond] [real] NOT NULL,
 	[VideoJson] [ntext] NULL,
 	[VideoUploaded] [bit] NULL,
@@ -231,7 +231,7 @@ CREATE PROCEDURE [dbo].[GetAllJobs]
 AS
 BEGIN
 	SELECT	j.Id as JobId, j.Description, j.CreatedById, u1.Name as CreatedByName, j.UserId, u3.Name as UserName, j.ReviewedById, u2.Name as ReviewedByName, j.CreateDate, 'TODO' as Progress,
-			j.ConfigJson, j.StatusId, js.Name as StatusName, v.Id as VideoId, v.Name as VideoName, v.Width, v.Height, v.DurationSeconds, v.FramesPerSecond, v.VideoJson
+			j.ConfigJson, j.StatusId, js.Name as StatusName, v.Id as VideoId, v.Name as VideoName, v.Width, v.Height, v.FramesNum, v.FramesPerSecond, v.VideoJson
 	FROM Jobs j
 	JOIN Videos v
 	ON j.VideoId = v.Id
@@ -386,7 +386,7 @@ CREATE PROCEDURE [dbo].[GetUserJobs]
 AS
 BEGIN
 	SELECT	j.Id as JobId, j.Description, j.CreatedById, u1.Name as CreatedByName, j.UserId, u3.Name as UserName, j.ReviewedById, u2.Name as ReviewedByName, j.CreateDate, 40 as Progress,
-			j.ConfigJson, j.StatusId, js.Name as StatusName, v.Id as VideoId, v.Name as VideoName, v.Width, v.Height, v.DurationSeconds, v.FramesPerSecond, v.VideoJson
+			j.ConfigJson, j.StatusId, js.Name as StatusName, v.Id as VideoId, v.Name as VideoName, v.Width, v.Height, v.FramesNum, v.FramesPerSecond, v.VideoJson
 	FROM Jobs j
 	JOIN Videos v
 	ON j.UserId = @UserId AND j.VideoId = v.Id
@@ -856,7 +856,7 @@ CREATE PROCEDURE [dbo].[UpsertVideo]
 	@Name nvarchar(100),
 	@Width int,
 	@Height int,
-	@DurationSeconds real,
+	@FramesNum real,
 	@FramesPerSecond real,
 	@VideoJson ntext = NULL,
 	@udtLabels UDT_LabelsList READONLY,
@@ -878,7 +878,7 @@ BEGIN
 		SET	Name = @Name
 			,Width = @Width
 			,Height = @Height
-			,DurationSeconds = @DurationSeconds
+			,FramesNum = @FramesNum
 			,FramesPerSecond = @FramesPerSecond
 			,VideoJson = @VideoJson
 		WHERE	Id = @Id
@@ -892,14 +892,14 @@ BEGIN
 			   ([Name]
 			   ,[Width]
 			   ,[Height]
-			   ,[DurationSeconds]
+			   ,[FramesNum]
 			   ,[FramesPerSecond]
 			   ,[VideoJson])
 		 VALUES
 			   (@Name
 			   ,@Width
 			   ,@Height
-			   ,@DurationSeconds
+			   ,@FramesNum
 			   ,@FramesPerSecond
 			   ,@VideoJson)
 

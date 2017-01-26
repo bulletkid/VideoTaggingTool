@@ -285,3 +285,9 @@ button:hover
     outline:0px !important;
     -webkit-appearance:none;
 }
+
+.flexColumn{
+    display:flex;
+    justify-content: flex-start;
+    flex-direction: column;
+}

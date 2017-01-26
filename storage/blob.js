@@ -2,8 +2,8 @@
 var config = require('../config');
 var url = require('url');
 
-var CONTAINER_NAME = 'vidoes';
-var URL_FORMAT = 'https://<storage-account-name>.blob.core.windows.net/<container-name>'
+var CONTAINER_NAME = 'videos';
+var URL_FORMAT = 'http://<storage-account-name>.blob.core.windows.net/<container-name>'
     .replace('<storage-account-name>', config.storage.account)
     .replace('<container-name>', CONTAINER_NAME);
 
@@ -82,12 +82,12 @@ function getVideoStream(opts, cb) {
   });
 }
 
-function getVideoUrl(id) {
-    return URL_FORMAT + '/' + id;
+function getVideoUrl(name) {
+    return URL_FORMAT + '/' + name;
 }
 
-function getVideoUrlWithSas(id) {
-  return getVideoUrl(id) + '?' + getSAS({ name: id });
+function getVideoUrlWithSas(name) {
+  return getVideoUrl(name) //+ '?' + getSAS({ name: id });
 }
 
 function getVideoUrlWithSasWrite(id) {

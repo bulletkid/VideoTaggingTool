@@ -51,6 +51,7 @@
     <Content Include="public\partials\upsertVideo.html" />
     <Content Include="public\partials\upsertjob.html" />
     <Content Include="public\partials\users.html" />
+    <Content Include="public\partials\videoTagging.html" />
     <Content Include="public\partials\videos.html" />
     <Content Include="public\video-tagging-0.0.5\index.html" />
     <Content Include="public\video-tagging-0.0.5\optional-tags.html" />

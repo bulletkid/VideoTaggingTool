@@ -29,7 +29,7 @@ function normalizeVideoRow(video) {
         video.Data = JSON.parse(video.VideoJson);
     delete video.VideoJson;
     
-    video.Url = blob.getVideoUrlWithSas(video.Id);
+    video.Url = blob.getVideoUrlWithSas(video.Name);
     return video;
 }
 
@@ -267,7 +267,7 @@ function createOrModifyVideo(req, cb) {
             request.addParameter('Name', TYPES.NVarChar, req.name);
             request.addParameter('Width', TYPES.Int, req.width);
             request.addParameter('Height', TYPES.Int, req.height);
-            request.addParameter('DurationSeconds', TYPES.Real, req.durationSeconds);
+//            request.addParameter('DurationSeconds', TYPES.Real, req.durationSeconds);
             request.addParameter('FramesPerSecond', TYPES.Real, req.framesPerSecond);
 
             var table = {
@@ -416,12 +416,15 @@ function getUserJobs(userId, cb) {
         sets: ['jobs'],
         params: [{name: 'UserId', type: TYPES.Int, value: userId}]
     }, function(err, result){
-        if (err) return logError(err, cb);
+        if (err){
+          console.log("ERROR HERE... ", err, result)
+          return logError(err, cb);
+        }
 
         var newResult = {
             jobs: []
         };
-
+        console.log("GOT USER JOBS ", result, cb);
         try {
             for (var i=0; i<result.jobs.length; i++) {
                 newResult.jobs.push(normalizeJobRow(result.jobs[i]));
@@ -445,7 +448,7 @@ function getAllJobs(cb) {
         var newResult = {
             jobs: []
         };
-        
+        console.log("JOBS RESULTS IS ", result);
         try {
             for (var i = 0; i < result.jobs.length; i++) {
                 newResult.jobs.push(normalizeJobRow(result.jobs[i]));

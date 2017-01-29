@@ -1,4 +1,5 @@
-﻿var videoTaggingAppControllers = angular.module('videoTaggingAppControllers', []);
+﻿// Comment for deploy
+var videoTaggingAppControllers = angular.module('videoTaggingAppControllers', []);
 
 videoTaggingAppControllers
 

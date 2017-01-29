@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <!--div class="form-group">
                 <label class="control-label col-sm-2" for="duration">duration (Seconds)</label>
                 <div class="col-sm-3">
                     <input type="text" class="form-control" id="duration" placeholder="Enter duration" ng-model="duration">
@@ -46,7 +46,7 @@
                 <div class="col-sm-3">
                     <input type="text" class="form-control" id="fps" placeholder="Enter frames per second" ng-model="framesPerSecond">
                 </div>
-            </div>
+            </div-->
 
             <div class="form-group">
                 <label class="control-label col-sm-2" for="tokenfield">Labels</label>
@@ -54,7 +54,17 @@
                     <input type="text" class="form-control" id="tokenfield" value="" ng-model="videoLabels" />
                     HINT: Type ',' after a new tag to add it
                 </div>
+                <button ng-click="upload()">Upload</button>
             </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="frames">Frames</label>
+                <div class="tokenfield col-sm-6" style="padding-top:7px;">
+                    <input type="file" ngf-select ng-model="files" id="frames" ngf-multiple="true"></input>
+                </div>
+            </div>
+
+
 
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">

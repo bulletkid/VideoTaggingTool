@@ -50,6 +50,14 @@ module.exports = function () {
       var url = blob.getVideoUrlWithSasWrite(id);
       return res.json({ url: url });
     });
+
+    router.get('/getUploadUrl/:video_id/:image_id', AdminLoggedIn, function (req, res) {
+      var video_id = req.params.video_id;
+      var image_id = req.params.image_id;
+      console.log('getting upload url for blob', video_id, image_id);
+      var url = blob.getVideoUrlWithSasWrite(video_id + "_" + image_id);
+      return res.json({ url: url, image_name: image_id });
+    });
     
     router.post('/videos/:id', AdminLoggedIn, function (req, res) {
       var id = req.params.id;

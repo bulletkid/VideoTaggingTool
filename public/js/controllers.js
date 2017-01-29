@@ -428,140 +428,8 @@ videoTaggingAppControllers
         $scope.clearMessages();
         var videoCtrl = document.getElementById('video-tagging');
         var jobId = $routeParams.id;
-        var regiontype = "rectangle"
-        var editedRegionId = false;
         var overlay = document.getElementById('overlay');
         ctx = overlay.getContext("2d");
-
-        ////////////////////////////////////////////////////////////////////////
-        // Area select
-        ///////////////////////////////////////////////////////////////////////
-//        drawRegion = function (x1, y1, x2, y2, regionname) {
-//            console.log("Draw region");
-//
-//            ctx.strokeStyle = 'rgb(0,0,0)';
-//            ctx.lineWidth = 1;
-//            if (regiontype.toLowerCase() === "point") {
-//
-//                var centerOffset = this.regionsize / 2;
-//
-//                ctx.beginPath();
-//                ctx.moveTo(x1 + centerOffset, y1 + centerOffset);
-//                ctx.lineTo(x1 - centerOffset, y1 - centerOffset);
-//                ctx.moveTo(x1 + centerOffset, y1 - centerOffset);
-//                ctx.lineTo(x1 - centerOffset, y1 + centerOffset);
-//                ctx.stroke();
-//                ctx.closePath();
-//            }
-//            else if (regiontype.toLowerCase() === "rectangle") {
-//                ctx.beginPath();
-//                ctx.moveTo(x1, y1);
-//                ctx.lineTo(x2, y1);
-//                ctx.moveTo(x2, y1);
-//                ctx.lineTo(x2, y2);
-//                ctx.moveTo(x2, y2);
-//                ctx.lineTo(x1, y2);
-//                ctx.moveTo(x1, y2);
-//                ctx.lineTo(x1, y1);
-//                ctx.stroke();
-//                ctx.closePath();
-//            }
-//        },
-//        clearArea = function(){
-//            console.log("Should clear area");
-//        }
-//        createRegion = function (x1, y1, x2, y2) {
-//            console.log("Should create region");
-////            var region = this.addRegion(x1, y1, x2, y2);//Add to in-memory collection
-//            drawRegion(x1, y1, x2, y2, "hello");//Draw
-////            this.regionSelected(region.name);//Select it by default
-//
-////            if (this.lockTagsEnabled) {
-////                //Get all selected tags and add them to current region automatically
-////                //this.selectedTags was populated in this.lockTagsClicked
-////                var arr = [];
-////                for (var i = 0; i < this.selectedTags.length; i++) {
-////
-////                    this.optionalTags.setSelected(this.selectedTags[i]);
-////                    arr.push(this.selectedTags[i].id)
-////                }
-////                this.addTagsToRegion(arr);
-////                var self = this;
-////                //Auto step functionality - Goes to next frame automatically
-////                if (this.multiregions === "0") {
-////                    setTimeout(function () {
-////                        self.stepFwdClicked();
-////                    }, 500);
-////                }
-////            }
-////            this.emitRegionToHost();//Persist
-//        }
-//        saveCloseSelection = function (selection) {
-//            if ((!selection.width || !selection.height)) {
-//                console.log("No Selection made... ", selection)
-//            }
-//            console.log("EDIT REGION ID - ", editedRegionId);
-//            if (editedRegionId || editedRegionId === 0) {
-//                this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.$$("#frameText").innerText][this.editedRegionId]);
-//            } else {
-//                createRegion(selection.x1, selection.y1, selection.x2, selection.y2);
-//            }
-//            clearArea();
-//            editedRegionId = false;
-//        }
-//
-//        $('canvas#overlay').imgAreaSelect({
-//            disable: true,
-//            show: false,
-//            hide: true
-//        });
-//        if (regiontype.toLowerCase() === "rectangle") {
-//
-//            $('canvas#overlay').imgAreaSelect({
-//                disable: false, //enable/disable
-//                handles: true, //grab handles when selecting the area
-//                movable: true,
-//                resizable: true,
-//                //aspectRatio: '1:1',
-//                maxWidth: self.overlay.offsetWidth,
-//                maxHeight: self.overlay.offsetHeight,
-//                minWidth: 10,
-//                fadeSpeed: 200,
-//
-//                onSelectEnd: function (img, selection) {
-//                    console.log("select end ", selection);
-//                    if (selection.width && selection.height) {
-//                        saveCloseSelection(selection);
-//                        return;
-//                    } else {
-//                        if (self.lastSelection) {
-//                            self.saveCloseSelection();
-//                        }
-//                    }
-//                    if (self.newRegionSelection) {
-//                        self.saveCloseSelection();
-//                    }
-//                },
-//                onSelectStart: function (img, selection) {
-//                    console.log("select start");
-//                    return;
-//                    self.cleanSelectedElements();
-//                    self.currentSelection = $(img).imgAreaSelect({ instance: true });
-//                    self.newRegionSelection = true;
-//                },
-//                onSelectChange: function (img, selection) {
-//                    console.log("select changed");
-//                    return;
-//                    if (selection.height && selection.width) {
-//                        self.lastSelection = selection;
-//                    }
-//                }
-//            });
-//        }
-
-        ////////////////////////////////////////////////////////////////////////
-        // END Area select
-        //////////////////////////////////////////////////////////////////////
 
 
         $scope.ajaxStart();
@@ -661,7 +529,7 @@ videoTaggingAppControllers
         })
     }])
 
-    .controller('UpsertVideoController', ['$scope', '$http', '$location', '$routeParams', function ($scope, $http, $location, $routeParams) {
+    .controller('UpsertVideoController', ['$scope', '$http', '$location', "$q", '$routeParams', 'Upload', function ($scope, $http, $location, $q, $routeParams, Upload) {
 
         var defaultId = -1;
 
@@ -705,7 +573,7 @@ videoTaggingAppControllers
                     $scope.url = video.Url;
                     $scope.height = video.Height;
                     $scope.width = video.Width;
-//                    $scope.duration = video.DurationSeconds.toFixed(2);
+                    $scope.framesNum = video.FramesNum;
                     $scope.framesPerSecond = video.FramesPerSecond.toFixed(2);
                     $scope.videoUploaded = video.VideoUploaded;
                     $scope.videoLabels = video.Labels;
@@ -723,6 +591,38 @@ videoTaggingAppControllers
             });
         }
 
+         // upload on file select or drop
+        upload = function (file, url) {
+            console.log("Uploading file ", file, url);
+            return Upload.http({
+                method: "PUT",
+                url: url,
+                headers: {
+                   'x-ms-blob-type': 'BlockBlob',
+                   'x-ms-blob-content-type': file.type
+                },
+                data: file
+            }).then(function(response) {
+                    console.log("response from uploading file ", response);
+                 if (response.status > 0)
+                            $scope.errorMsg = response.status + ': ' + response.data;
+            });
+        };
+
+        $scope.upload_all_files = function (video_id) {
+            var filePromises = [];
+            for (file in $scope.files){
+                // Get url for upload
+                $http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + $scope.files[file].name }).success(function (result) {
+                    console.log("File url is ", result);
+                    filePromises.push(upload($scope.files[result.image_name.split(".")[0]], result.url));
+                });
+            }
+            $q.all(filePromises).then(function(result){
+                console.log("Finish upload all files... ", result);
+            })
+        }
+
         $scope.submit = function () {
 
             $scope.clearMessages();
@@ -730,19 +630,19 @@ videoTaggingAppControllers
             if (!$scope.name) return $scope.showError('name was not provided');
             if (!$scope.height) return $scope.showError('height was not provided');
             if (!$scope.width) return $scope.showError('width was not provided');
-            if (!$scope.duration) return $scope.showError('duration was not provided');
-            if (!$scope.framesPerSecond) return $scope.showError('framesPerSecond was not provided');
+            $scope.framesPerSecond = 30;
 
             var labels = $('#tokenfield').tokenfield('getTokens').map(function (label) {
                 return label.value;
             });
+            console.log("labels.... ", labels);
 
             // First add the video to the database
             var data = {
                 name: $scope.name,
                 height: $scope.height,
                 width: $scope.width,
-//                durationSeconds: $scope.duration,
+                framesNum: $scope.files.length,
                 framesPerSecond: $scope.framesPerSecond,
                 labels: labels
             };
@@ -760,6 +660,12 @@ videoTaggingAppControllers
                     $scope.showInfo('video ' + result.videoId + ($scope.videoId == defaultId ? ' created' : ' modified') + ' successfully');
                     $scope.videoId = result.videoId;
                     $scope.ajaxCompleted();
+
+                    $http({ method: 'GET', url: '/api/videos/' + $scope.videoId + "/url" })
+                        .success(function (result) {
+                            console.log("Got results of url ", result);
+                            $scope.upload_all_files($scope.videoId);
+                        });
                 })
                 .error(function (err) {
                     console.error(err);
@@ -776,7 +682,7 @@ videoTaggingAppControllers
             $.get('/api/videos/' + $scope.videoId + '/url')
                 .success(function (result) {
                     console.log('url', result);
-                    uploadImage(result.url);
+//                    uploadImage(result.url);
                 })
                 .error(function (err) {
                     console.error('error getting blob Url', err);

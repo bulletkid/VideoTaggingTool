@@ -29,7 +29,7 @@ function normalizeVideoRow(video) {
         video.Data = JSON.parse(video.VideoJson);
     delete video.VideoJson;
     
-    video.Url = blob.getVideoUrlWithSas(video.Name);
+    video.Url = blob.getVideoUrlWithSas(video.Id);
     return video;
 }
 
@@ -267,7 +267,7 @@ function createOrModifyVideo(req, cb) {
             request.addParameter('Name', TYPES.NVarChar, req.name);
             request.addParameter('Width', TYPES.Int, req.width);
             request.addParameter('Height', TYPES.Int, req.height);
-//            request.addParameter('DurationSeconds', TYPES.Real, req.durationSeconds);
+            request.addParameter('FramesNum', TYPES.Real, req.framesNum);
             request.addParameter('FramesPerSecond', TYPES.Real, req.framesPerSecond);
 
             var table = {

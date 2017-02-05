@@ -457,13 +457,14 @@ videoTaggingAppControllers
                         console.log("UDIIIIIIIIIIIIIIII Got video framessss .... ", result.frames)
                         videoCtrl.inputframes = result.frames;
                         videoCtrl.videoBaseUrl = jobData.video.Url + "_";
-//                        $scope.frames = result.frames;
-//                        $scope.videoImageSrcBaseUrl = "http://perceptotest.blob.core.windows.net/videos/video1_";
-//                        $scope.currentFrame = 1;
-//                        $scope.img_src = $scope.videoImageSrcBaseUrl + $scope.currentFrame.toString() + ".jpg"; ///+ this.storageSuffix;
-//                        videoCtrl.src = '';
-////                        console.log('UDIIIIIIIIIIIIIII video url', jobData.video.Url);
-//                        videoCtrl.src = jobData.video.Url;
+
+                        // Preload images
+                        var images = []
+                        for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
+                            var image = new Image();
+                            image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
+                            images.push(image)
+                        }
                         $scope.ajaxCompleted();
                     });
             });

@@ -450,11 +450,11 @@ videoTaggingAppControllers
 
                 videoCtrl.inputtagsarray = jobData.job.Config.tags;
 
-                console.log("UDIIIII storage suffix from controller is ", videoCtrl.storageSuffix)
+                console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
 
                 $http({ method: 'GET', url: '/api/jobs/' + $routeParams.id + '/frames' })
                     .success(function (result) {
-                        console.log("UDIIIIIIIIIIIIIIII Got video framessss .... ", result.frames)
+                        console.log("Got video framessss .... ", result.frames)
                         videoCtrl.inputframes = result.frames;
                         videoCtrl.videoBaseUrl = jobData.video.Url + "_";
 

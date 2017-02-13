@@ -612,17 +612,22 @@ videoTaggingAppControllers
         };
 
         $scope.upload_all_files = function (video_id) {
+            $scope.uploading_files = true;
+            $scope.finish_uploading_files = false;
             var filePromises = [];
+            var fileUrlsPromises = [];
             for (file in $scope.files){
                 // Get url for upload
-                $http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + $scope.files[file].name }).success(function (result) {
+                fileUrlsPromises.push($http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + $scope.files[file].name }).success(function (result) {
                     console.log("File url is ", result);
-                    filePromises.push(upload($scope.files[result.image_name.split(".")[0]], result.url));
-                });
+                    return upload($scope.files[result.image_name.split(".")[0]], result.url);
+                }));
             }
-            $q.all(filePromises).then(function(result){
-                console.log("Finish upload all files... ", result);
-            })
+            $q.all(fileUrlsPromises).then(function(result){
+                    console.log("Finish upload all files... ", result);
+                    $scope.uploading_files = false;
+                    $scope.finish_uploading_files = true;
+            });
         }
 
         $scope.submit = function () {

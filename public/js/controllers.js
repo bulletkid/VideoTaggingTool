@@ -620,13 +620,15 @@ videoTaggingAppControllers
                 // Get url for upload
                 fileUrlsPromises.push($http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + $scope.files[file].name }).success(function (result) {
                     console.log("File url is ", result);
-                    return upload($scope.files[result.image_name.split(".")[0]], result.url);
+                    filePromises.push(upload($scope.files[result.image_name.split(".")[0]], result.url));
                 }));
             }
             $q.all(fileUrlsPromises).then(function(result){
+                $q.all(filePromises).then(function(result){
                     console.log("Finish upload all files... ", result);
                     $scope.uploading_files = false;
                     $scope.finish_uploading_files = true;
+                });
             });
         }
 

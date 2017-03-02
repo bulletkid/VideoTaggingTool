@@ -5,6 +5,7 @@
 
         <!-- video tagging -->
         <div class="row">
+            <div ng-if="!all_images_loaded" style="position: absolute; width:70%; height: 70%; background-color: white; z-index: 1000000;">Loaded {{total_images_loaded}} of {{num_of_images}}</div>
             <div style="width: 70%">
                 <video-tagging id='video-tagging'></video-tagging>
             </div>

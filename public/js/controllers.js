@@ -452,11 +452,14 @@ videoTaggingAppControllers
 
                 console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
 
+                $scope.total_images_loaded = 0
+
                 $http({ method: 'GET', url: '/api/jobs/' + $routeParams.id + '/frames' })
                     .success(function (result) {
                         console.log("Got video framessss .... ", result.frames)
                         videoCtrl.inputframes = result.frames;
                         videoCtrl.videoBaseUrl = jobData.video.Url + "_";
+                        $scope.num_of_images = videoCtrl.framesNum
 
                         // Preload images
                         var images = []
@@ -464,6 +467,17 @@ videoTaggingAppControllers
                             var image = new Image();
                             image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
                             images.push(image)
+                            image.addEventListener('load', function(){
+                                $scope.$apply(function(){
+                                        $scope.total_images_loaded += 1;
+                                        if ($scope.total_images_loaded == ($scope.num_of_images - 1)){
+                                            console.log("all images loaded... ", image.src, $scope.total_images_loaded);
+                                            $scope.all_images_loaded = true;
+                                        }
+                                    }
+                                )
+
+                            })
                         }
                         $scope.ajaxCompleted();
                     });

@@ -1,0 +1,1182 @@
+<!--
+       * video-tagging control for video tagging
+       * Main file of the video-tagging module.
+-->
+
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="video-taggingstyles.html">
+<link rel="import" href="optional-tags.html">
+<link rel="import" href="playback-control.html">
+
+<dom-module id="video-tagging">
+<template>
+    <style include="video-taggingstyles"></style>
+    <link rel="stylesheet" href="css/sliders.css"/>
+    <link rel="stylesheet" href="css/imgareaselect-animated.css"/>
+    <link rel="stylesheet" href="assets/icons/style.css">
+    <div>
+        <div id="controlWrapper" class="flexColumn" style="width:640px;" >
+            <div id='videoWrapper' style="position: relative;">
+                <div id="regionLabelDiv" style="width:40px;height:20px;" class="regionLabel">
+                    <span id="regionLabelSpan" class="regionLabelSpan"></span>
+                    <span id="closeRegionImage" on-click="deleteRegion"
+                          class="closeRegion clickableControl">X</span>
+                </div>
+                <canvas id="overlay" class="overlaystyle"
+                        style="width:640px; height: 480px; position: absolute; z-index: 10;">
+                    Your browser does not support the HTML5 canvas location.
+                </canvas>
+                <img id='mainImg'
+                     style="width:640px; height: 480px; z-index: 1;"/>
+            </div>
+        <div id="videoControls" class="videoControls">
+            <input id="seekBar" class="seek clickableControl" type="range" min='0' value="0" step="any" required/>
+            <table id="videoControlsTable" class="videoControlsTable">
+
+                <tr>
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="stepbwd" title="prev" class="icon-backward2 taggingControls"
+                              on-click='prevFrameClicked'></span>
+                    </td>
+										<!--
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="play-pause" title="play/pause" class="icon-play3 taggingControls"
+                              on-click='playPauseClicked'></span>
+                    </td>
+										-->
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="stepfwd" title="next" class="icon-forward3 taggingControls"
+                              on-click='nextFrameClicked'></span>
+                    </td>
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="nextuntagged" title="first untagged frame" class="icon-next2 taggingControls"
+                              on-click='nextUntaggedClicked'></span>
+                    </td>
+                    <td class="videoControlCell frameNumber">
+                        <span id='frameText' class="textElements" title="frame#"></span>
+                    </td>
+										<!--
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="lastsaved" title="To the last saved frame" class="icon-last taggingControls"
+                              on-click='lastSavedFrameClicked'></span>
+                    </td>
+                    <td id="playSpeedCell" title="play speed" class="videoControlCell longControl clickableControl">
+                        <span id="playbackSpan" class="textElements" on-click="playbackSpeedClicked">x 1.0</span>
+                    </td>
+                    <td nowrap="nowrap" class="videoControlCell simpleControl">
+                        <span id="timeSpan" class="textElements"></span>
+                    </td>
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="mute" title="Mute" class="icon-volume-mute2 taggingControls"
+                              on-click='muteClicked'></span>
+                    </td>
+                    <td class="volumeControlCell longControl">
+                        <input id="volumeSlider" class="volume clickableControl" type="range" min=0 max=1 value=.5
+                               step=.1 required/>
+                    </td>
+										-->
+                </tr>
+            </table>
+        </div>
+        <div id="videoTagControls" class="videoTagControls">
+            <div class="optionalTags">
+                <div class="optionalTagsWrapper">
+                    <optional-tags id="optionalTags"></optional-tags>
+                </div>
+            </div>
+            <div class="labelControls">
+                <span id="emptyFrame" title="empty frame" class="icon-share taggingControls controlOff"
+                      on-click='emptyFrameClicked'></span>
+                <span id="lockTag" title="lock tags" class="icon-pushpin taggingControls lockTag controlOff"
+                      on-click='lockTagsClicked'></span>
+            </div>
+            <div style="clear: both">
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="color-controls">
+        <h4>Selected region color:</h4>
+        <a href="javascript:void(0)" class="btn btn-success" on-click="setGreenBorders">Green</a>
+        <a href="javascript:void(0)" class="btn btn-warning" on-click="setYellowBorders">Yellow</a>
+        <a href="javascript:void(0)" class="btn btn-danger" on-click="setRedBorders">Red</a>
+    </div>
+</template>
+<script>
+
+Polymer({
+
+    is: 'video-tagging',
+
+    properties: {
+
+        framerate: Number,
+        framesNum: Number,
+        videowidth: Number,
+        videoheight: Number,
+        regiontype: String,
+        multiregions: Number,
+        regionsize: Number,
+        inputtagsarray: Object,
+        inputframes: Object,
+        videoBaseUrl: {
+            type: String,
+            value: '',
+            observer: 'GotSrc'
+        }
+//        src: {
+//            type: String,
+//            value: '',
+//            observer: 'videoSrcChanged'
+//        }
+    },
+    // Element Lifecycle
+    ready: function () {
+        /**
+         * keyboard shortcuts managing:
+         * see: https://github.com/madrobby/keymaster
+         */
+        this.keyboardControl = window.key.noConflict();
+
+        this.frames = {}; // Holds the data of the tagged frames, their regions and tags
+        this.seeking = false;//Flag for enabling control over the seek bar while the video is playing, see playingCallback function
+        this.selectedRegionId = 0;//Holds the current selected region number
+        this.lockTagsEnabled = false;
+        this.selectedTags = [];
+
+        this.borderColor = 'red';
+
+        //Divs and spans
+        this.controlWrapper = this.$$('#controlWrapper');
+        this.videoWrapper = this.$$('#videoWrapper');
+        this.overlay = this.$$('#overlay');
+        this.video = this.$$('#vid');
+        this.optionalTags = this.$$('#optionalTags');
+        this.regionLabelDiv = this.$$('#regionLabelDiv');
+        this.regionLabelSpan = this.$$('#regionLabelSpan');
+        this.timeSpan = this.$$('#timeSpan');
+        this.frameText = this.$$("#frameText");
+        this.playbackSpan = this.$$("#playbackSpan");
+
+        // Buttons
+        this.playButton = this.$$('#play-pause');
+        this.stepfwd = this.$$("#stepfwd");
+        this.stepbwd = this.$$("#stepbwd");
+        this.lockTag = this.$$("#lockTag");
+        this.playSpeedControl = this.$$("#playSpeedControl");
+        this.playSpeedCell = this.$$("#playSpeedCell");
+        this.mute = this.$$('#mute');
+        this.emptyFrame = this.$$("#emptyFrame");
+        this.nextuntagged = this.$$("#nextuntagged");
+
+        // Sliders
+        this.seekBar = this.$$("#seekBar");
+        this.volumeSlider = this.$$("#volumeSlider");
+        //dynamic styles for sliders
+        this.volumeStyle = document.createElement('style');
+        Polymer.dom(this.root).appendChild(this.volumeStyle);
+
+        this.seekStyle = document.createElement('style');
+        Polymer.dom(this.root).appendChild(this.seekStyle);
+
+        this.playing = null;
+        this.ctx = this.overlay.getContext("2d");
+
+
+
+    },
+
+    attachEvents: function () {
+        var key_codes_to_ignore = [83, 90, 88]
+        var self = this;
+        this.keyboardControl('right, shift+right', function (event, handler) {
+            console.log("key right!!1 ", self.currentSelection)
+            if(self.currentSelection == null){
+                var pressedKeys = self.keyboardControl.getPressedKeyCodes();
+                var to_ignore = false
+                for (key in pressedKeys) {
+                    if (key_codes_to_ignore.indexOf(pressedKeys[key]) != -1) {
+                        to_ignore = true
+                    }
+                }
+                if (!to_ignore) {
+                    self.clearArea();
+                    self.stepFwdClicked(!event.shiftKey);
+                }
+            }
+        });
+        this.keyboardControl('left, shift+left', function (event, handler) {
+            var pressedKeys = self.keyboardControl.getPressedKeyCodes();
+            var to_ignore = false
+            if(self.currentSelection == null){
+                for (key in pressedKeys) {
+                    if (key_codes_to_ignore.indexOf(pressedKeys[key]) != -1) {
+                        to_ignore = true
+                    }
+                }
+                if (!to_ignore) {
+                    self.clearArea();
+                    self.stepBwdClicked(true); //never copy rec backwards...
+                }
+            }
+        });
+    },
+
+    /**
+     * Events registration and handling
+     *
+     * @method attached
+     * Events registration and handling
+     */
+    attached: function () {
+
+        //Reset all variables to new src
+        var self = this;
+
+        this.addEventListener('regionsavefail', function (e) {
+            alert('Frame Saving Failed! Try again!');
+            var currentFrame = self.frames[e.detail.frameIndex];
+            self.editRegion(e.detail.editedRegionId);
+        });
+
+//        this.video.addEventListener("loadedmetadata", function (e) {
+//
+//            self.controlWrapper.style.display = "block";
+//
+//            //Size canvas as video
+//            self.overlay.width = self.video.offsetWidth;
+//            self.overlay.height = self.video.offsetHeight;
+//
+//            //Init variables and controls
+//            self.frames = self.inputframes ? self.inputframes : {};
+//            self.frameTime = 1 / self.framerate;
+//            self.enableAreaSelect(self);
+//            self.optionalTags.createTagControls(self.inputtagsarray);
+//
+//            //Init sliders
+//            self.volumeSlider.value = .5;
+//            self.seekBar.max = self.video.duration;
+//            self.playingCallback();
+//
+//        }, false);
+//
+//        this.video.onended = function () {
+//
+//            self.pauseState();
+//        }
+
+//        this.seekBar.addEventListener("mousedown", function () {
+//
+//            self.seeking = true;
+//        });
+//        this.seekBar.addEventListener("mouseup", function () {
+//
+//            self.seeking = false;
+//        });
+//        this.seekBar.addEventListener("change", function () {
+//            self.seeking = false;
+//            self.video.currentTime = self.seekBar.value;
+//            self.video.currentTime = Math.min(self.video.duration, self.video.currentTime + self.frameTime);
+//            self.playingCallback();
+//        });
+//        this.volumeSlider.addEventListener("change", function () {
+//            self.video.volume = self.volumeSlider.value;
+//            var perc = 100 * self.volumeSlider.value / self.volumeSlider.max;
+//            self.volumeStyle.textContent = '.volume::-webkit-slider-runnable-track{background-size:' + perc + '% 100%} ';
+//            self.volumeStyle.textContent += '.volume::-moz-range-track{background-size:' + perc + '% 100%} ';
+//        });
+//        this.addEventListener("playSpeedSelected", function (e) {
+//            self.playback(e.detail.playbackValue, e.detail.playbackText);
+//        });
+        this.addEventListener("ontagsubmitted", function (e) {
+            var arr = [];
+            arr.push(e.detail.tagid)
+            this.addTagsToRegion(arr);
+            this.emitRegionToHost();//Persist
+        });
+        this.addEventListener("ontagdeleted", function (e) {
+
+            var regionId = this.selectedRegionId - 1;//Revert to zero-based array
+            var region = this.frames[this.currentFrame + 1][regionId];
+            for (var index = 0; index < region.tags.length; index++) {
+                if (region.tags[index] === e.detail.tagid) {
+                    region.tags.splice(index, 1);
+                    break;
+                }
+            }
+            this.emitRegionToHost();
+        });
+
+        //hide region label on leave
+        $(this.regionLabelDiv).mouseleave(function (e) {
+            self.regionLabelDiv.style.display = "none";
+        });
+
+        this.attachEvents();
+
+        //keyboard shortcuts:
+        var keyCodes = {
+            83: 's',
+            90: 'z',
+            88: 'x',
+            38: 'up',
+            37: 'left',
+            39: 'right',
+            40: 'down'
+        };
+        var selectionShortcuts = {
+            's+up': [0, -1, 0, -1],
+            's+down': [0, 1, 0, 1],
+            's+left': [-1, 0, -1, 0],
+            's+right': [1, 0, 1, 0],
+            'z+up': [0, 1, 0, 0],
+            'z+down': [0, 0, 0, -1],
+            'z+left': [1, 0, 0, 0],
+            'z+right': [0, 0, -1, 0],
+            'x+up': [0, -1, 0, 0],
+            'x+down': [0, 0, 0, 1],
+            'x+left': [-1, 0, 0, 0],
+            'x+right': [0, 0, 1, 0]
+        };
+        this.keyboardControl('up, down, left, right', function (e, handler) {
+            if (self.currentSelection) {
+                e.preventDefault();
+                var pressedKeys = self.keyboardControl.getPressedKeyCodes();
+                if (pressedKeys.length !== 2) {
+                    var shortcut = "s" + '+' + keyCodes[pressedKeys[0]];
+                    if (selectionShortcuts[shortcut]) {
+                        self.changeCurrentSelection.apply(self, selectionShortcuts[shortcut]);
+                    }
+                }
+                var shortcut = keyCodes[pressedKeys[0]] + '+' + keyCodes[pressedKeys[1]];
+                if (selectionShortcuts[shortcut]) {
+                    self.changeCurrentSelection.apply(self, selectionShortcuts[shortcut]);
+                }
+            }
+        });
+        document.addEventListener("keydown", function (e) {
+
+            //"enter"
+            if (e.which === 13) {
+                if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || e.repeat) {
+                    return;
+                }
+                if (self.currentSelection) {
+                    e.preventDefault();
+                    self.saveCloseSelection();
+                }
+            }
+
+            //"backspace"
+            // if (e.which === 8) {
+            //   if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || e.repeat) {
+            //     return;
+            //   }
+            //   if (self.currentSelection) {
+            //     e.preventDefault();
+            //     self.currentSelection.cancelSelection();
+            //     self.lastSelection = self.currentSelection = null;
+
+            //   }
+            // }
+
+            //"tab"
+            if (e.which === 9 && !(e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || e.repeat)) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (self.currentSelection) {
+                    var nextId = self.editedRegionId + 2;
+                    if (self.frames[self.getCurrentFrame() + 1].length < nextId) {
+                        nextId = 1;
+                    }
+                    self.editRegion(nextId);
+                } else {
+                    self.editRegion(1);
+                }
+            }
+
+            //"shift + tab"
+            if (e.which === 9 && e.shiftKey && !(e.altKey || e.ctrlKey || e.metaKey || e.repeat)) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (self.currentSelection) {
+                    var nextId = self.editedRegionId;
+                    if (nextId < 1) {
+                        nextId = self.frames[self.getCurrentFrame()].length;
+                    }
+                    self.editRegion(nextId);
+                } else {
+                    self.editRegion(1);
+                }
+            }
+        });
+    },
+
+    /**
+     * JQuery Area selector
+     * Based on JQuery plugin imgareaselect
+     * http://odyniec.net/projects/imgareaselect/usage.html
+     *
+     * Allows selection of a rectangle
+     */
+    currentSelection: null,
+    lastSelection: null,
+    newRegionSelection: false,
+    editedRegionId: null,
+    clearArea: function () {
+        $('canvas#overlay').imgAreaSelect({
+
+            show: false,
+            hide: true
+        });
+        this.editedRegionId = this.newRegionSelection = false;
+    },
+    enableAreaSelect: function (self) {
+        $('canvas#overlay').imgAreaSelect({
+            disable: true,
+            show: false,
+            hide: true
+        });
+        if (this.regiontype.toLowerCase() === "rectangle") {
+
+            $('canvas#overlay').imgAreaSelect({
+                disable: false, //enable/disable
+                handles: true, //grab handles when selecting the area
+                movable: true,
+                resizable: true,
+                //aspectRatio: '1:1',
+                maxWidth: self.overlay.offsetWidth,
+                maxHeight: self.overlay.offsetHeight,
+                minWidth: 10,
+                fadeSpeed: 200,
+
+                onSelectEnd: function (img, selection) {
+                    if (selection.width && selection.height) {
+                    } else {
+                        if (self.lastSelection) {
+                            self.saveCloseSelection();
+                        }
+                    }
+                    if (self.newRegionSelection) {
+                        self.saveCloseSelection();
+                    }
+                },
+                onSelectStart: function (img, selection) {
+                    self.cleanSelectedElements();
+                    self.currentSelection = $(img).imgAreaSelect({ instance: true });
+                    self.newRegionSelection = true;
+                },
+                onSelectChange: function (img, selection) {
+                    if (selection.height && selection.width) {
+                        self.lastSelection = selection;
+                    }
+                }
+            });
+        }
+    },
+    saveCloseSelection: function () {
+        var selection = this.currentSelection.getSelection();
+        console.log("UDIIII save close selection ", selection);
+        if ((!selection.width || !selection.height) && this.lastSelection) {
+            selection = this.lastSelection;
+        }
+        this.lastSelection = this.currentSelection = null;
+        if (this.editedRegionId || this.editedRegionId === 0) {
+            this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.currentFrame + 1][this.editedRegionId]);
+        } else {
+            this.createRegion(selection.x1, selection.y1, selection.x2, selection.y2);
+        }
+        this.clearArea();
+        this.editedRegionId = this.newRegionSelection = false;
+    },
+    changeCurrentSelection: function (x1, y1, x2, y2) {
+        var position = this.currentSelection.getSelection();
+        if (position.height && position.width) {
+            this.lastSelection = this.currentSelection.getSelection();
+        }
+        this.currentSelection.setSelection(
+                position.x1 + x1,
+                position.y1 + y1,
+                position.x2 + x2,
+                position.y2 + y2);
+        this.currentSelection.update();
+    },
+    updateExistingBorders: function (color) {
+        this.$$('.regionCanvasSelected').classList.remove('greenBorder', 'yellowBorder', 'redBorder');
+        this.$$('.regionCanvasSelected').classList.add(color + 'Border');
+    },
+    setGreenBorders: function () {
+        this.borderColor = 'green';
+        this.updateExistingBorders(this.borderColor);
+    },
+    setYellowBorders: function () {
+        this.borderColor = 'yellow';
+        this.updateExistingBorders(this.borderColor);
+    },
+    setRedBorders: function () {
+        this.borderColor = 'red';
+        this.updateExistingBorders(this.borderColor);
+    },
+
+    /**
+     * All functions related to regions management
+     *
+     * @method positionRegionNameLabel
+     * Positions the div with the region number next to the region div.
+     * @param {div} The region div
+     */
+    //Regions management
+    positionRegionNameLabel: function (div) {
+
+        this.regionLabelDiv.style.left = (div.offsetLeft + parseFloat(div.style.width, 10) - parseFloat(this.regionLabelDiv.style.width, 10)) + "px";
+        this.regionLabelDiv.style.top = (div.offsetTop - parseFloat(this.regionLabelDiv.style.height, 10)) + "px";
+        //Out of bounds top - move it below div
+        if (parseFloat(this.regionLabelDiv.style.top) < 0) {
+            this.regionLabelDiv.style.top = (div.offsetTop + parseFloat(div.style.height, 10)) + "px";
+        }
+        this.regionLabelSpan.innerHTML = div.id;
+        this.regionLabelDiv.style.display = "block";
+    },
+    createRegion: function (x1, y1, x2, y2) {
+
+        var region = this.addRegion(x1, y1, x2, y2);//Add to in-memory collection
+//        this.drawRegion(x1, y1, x2, y2, region.name);//Draw
+        this.showAllRegions(true);
+        this.regionSelected(region.name);//Select it by default
+
+        if (this.lockTagsEnabled) {
+            //Get all selected tags and add them to current region automatically
+            //this.selectedTags was populated in this.lockTagsClicked
+            var arr = [];
+            for (var i = 0; i < this.selectedTags.length; i++) {
+
+                this.optionalTags.setSelected(this.selectedTags[i]);
+                arr.push(this.selectedTags[i].id)
+            }
+            this.addTagsToRegion(arr);
+            var self = this;
+            //Auto step functionality - Goes to next frame automatically
+            if (this.multiregions === "0") {
+                setTimeout(function () {
+                    self.stepFwdClicked();
+                }, 500);
+            }
+        }
+        this.emitRegionToHost();//Persist
+    },
+
+    addTagsToRegion: function (selectedTagsArray) {
+
+        var regionId = this.selectedRegionId - 1;//Revert to zero-based array
+        var region = this.frames[this.currentFrame + 1][regionId];
+        for (var i = 0; i < selectedTagsArray.length; i++) {
+
+            region.tags.push(selectedTagsArray[i]);
+        }
+    },
+    nextUntaggedClicked: function () {
+//        var frameIndex = this.currentFrame;
+//        var frames = this.video.duration * this.framerate;
+//        var framesForward = 1;
+        for (var i = 1; i < this.framesNum; i++) {
+            //The next frame is a first occurence of a frame with no regions
+            if (!this.frames[i] || this.frames[i].length == 0) {
+                this.displayFrame(i - 1);
+                return;
+            }
+        }
+    },
+    prevFrameClicked: function () {
+        var frameIndex = this.currentFrame;
+        console.log("PrevFrame Clicked: Previous frame is ", frameIndex );
+				if (frameIndex != 0) {
+								//frameIndex = frameIndex - 1;
+                this.displayFrame(frameIndex - 1);
+                return;
+				}
+    },
+    nextFrameClicked: function () {
+        var frameIndex = this.currentFrame;
+        console.log("NextFrameClicked: Current frame is ", frameIndex );
+        this.displayFrame(frameIndex + 1);
+//        console.log("Video is ", this.video);
+//        console.log("Total frames are ", this.video.FramesNum );
+//				if (frameIndex + 1 < this.video.framesNum ) {
+//								frameIndex = frameIndex + 1;
+//                this.displayFrame(frameIndex);
+//                return;
+//				}
+    },
+    lastSavedFrameClicked: function () {
+        var frameIndex = this.currentFrame;
+        var frames = this.video.duration * this.framerate;
+        var savedFramesIndexes = Object.keys(this.frames);
+        var framesForward = parseInt(savedFramesIndexes[savedFramesIndexes.length - 1]) - 1;
+        if (!this.video.paused) {
+            this.playPauseClicked();//Will pause the video
+        }
+        this.video.currentTime += (this.frameTime * framesForward);
+        this.playingCallback();
+    },
+    lockTagsClicked: function () {
+
+        var selTags = this.optionalTags.getSelectedTags();
+        //There has to be selected label/s
+        if (!this.lockTagsEnabled && selTags.length > 0) {
+            this.lockTagsEnabled = true;
+            this.selectedTags = selTags;
+            if (this.multiregions === "0") {
+                this.stepFwdClicked()
+            }
+            ;
+        }
+        else {
+            this.lockTagsEnabled = false;
+            this.selectedTags = [];
+            this.optionalTags.resetSelected();
+        }
+        this.lockTag.classList.toggle("controlOn", this.lockTagsEnabled);
+        this.lockTag.classList.toggle("controlOff", !this.lockTagsEnabled);
+    },
+    regionSelected: function (divId) {
+//        this.cleanSelectedElements();
+        var div = document.getElementById(divId);
+        div.classList.add("regionCanvasSelected");
+        div.classList.remove("greenBorder", "yellowBorder", "redBorder");
+        div.classList.add(this.borderColor + "Border");
+        this.selectedRegionId = div.id;
+        this.positionRegionNameLabel(div);
+
+        //Tags - display the tags of the region and enable editing
+        this.optionalTags.toggleEnableButtons(true);
+        this.optionalTags.resetSelected();
+        var regions = this.frames[this.currentFrame + 1];
+        if (regions) {
+            var tags = this.frames[this.currentFrame + 1][this.selectedRegionId - 1].tags;
+            this.optionalTags.displaySelectedTags(tags);
+        }
+    },
+    deleteRegion: function (e) {
+
+        var regions = this.frames[this.currentFrame + 1];
+        regions.splice(this.selectedRegionId - 1, 1);
+        //Shift array left to cover removed item - Rename all regions which are higher than the deleted one,
+        for (var i = 0; i < regions.length; i++) {
+            var id = Number(regions[i].name)
+            if (id > this.selectedRegionId) {
+                regions[i].name = id - 1;
+            }
+        }
+        this.showAllRegions(true);
+        this.emitRegionToHost();
+    },
+    editRegion: function (divId) {
+        if (this.currentSelection) {
+            this.saveCloseSelection();
+            this.selectedRegionId = divId;
+        }
+        var currentRegion = this.frames[this.currentFrame + 1][divId - 1];
+        var widthRatio = $('#mainImg').width() / currentRegion.width;
+        var heightRatio = $('#mainImg').height() / currentRegion.height;
+        this.currentSelection = $('canvas#overlay').imgAreaSelect({
+            instance: true,
+            x1: (currentRegion.x1 * widthRatio),
+            y1: (currentRegion.y1 * heightRatio),
+            x2: (currentRegion.x2 * widthRatio),
+            y2: (currentRegion.y2 * heightRatio)
+        });
+        this.lastSelection = this.currentSelection.getSelection();
+        this.lastEditedRegion = divId;
+        this.editedRegionId = divId - 1;
+        this.hideEditedRegion();
+    },
+    hideEditedRegion: function () {
+        this.clearFrameElements();//Clear canvas and tags
+        this.cleanSelectedElements();//Clear selected regions
+        var frameIndex = this.currentFrame + 1;
+        var regions = this.frames[frameIndex];
+        var prevRegions = this.frames[frameIndex - 1];
+        if (this.checkRegionsPresence(regions) || playing === true) {
+            //Draw all regions for this frame
+            this.drawAllRegionsExeptEditedOnFrame();
+        } else {
+            if (!regions && this.checkRegionsPresence(prevRegions)) {
+                console.log('copy regions from previous frame');
+                console.log('prev regions: ', prevRegions);
+                var clonedArray = JSON.parse(JSON.stringify(prevRegions));
+                this.frames[frameIndex] = clonedArray;
+                this.emitRegionToHost();
+                setTimeout(this.drawAllRegionsExeptEditedOnFrame(), 640);
+            }
+        }
+    },
+    updateRegion: function (x1, y1, x2, y2, region) {
+        region.x1 = x1;
+        region.y1 = y1;
+        region.x2 = x2;
+        region.y2 = y2;
+        region.width = $('#mainImg').width();
+        region.height = $('#mainImg').height();
+//        this.drawRegion(x1, y1, x2, y2, region.name);//Draw
+        this.showAllRegions(true);
+        this.regionSelected(region.name);//Select it by default
+        this.emitRegionToHost();//Persist
+    },
+    /**
+     * @method emitRegionToHost
+     * Fires an event to send the array of regions.
+     * The host html page can listen to this event.
+     */
+    emitRegionToHost: function () {
+        var frameIndex = this.currentFrame + 1;
+        this.fire('onregionchanged', {frame: {frameIndex: frameIndex, regions: this.frames[frameIndex], editedRegion: this.lastEditedRegion}});
+    },
+    /**
+     * @method addDivToRegion
+     * Adds a transparent div to the region, the size of the region.
+     * Used for click events, hover, etc..
+     * @params {x1, y1, x2, y2} region coordinates.
+     * @param {regionId} The region id, which is the region index + 1.
+     */
+    addDivToRegion: function (x1, y1, x2, y2, regionId) {
+        var div = document.createElement("div");
+        div.id = regionId;
+        div.classList.add("regionCanvas");
+
+        if (this.regiontype.toLowerCase() === "point") {
+            div.style.width = this.regionsize - 1 + "px";//Compensate for 1px border
+            div.style.height = this.regionsize - 1 + "px";
+            div.style.top = y1 - this.regionsize / 2 + "px";
+            div.style.left = x1 - this.regionsize / 2 + "px";
+        }
+        if (this.regiontype.toLowerCase() === "rectangle") {
+            div.style.width = x2 - x1 + "px";
+            div.style.height = y2 - y1 + "px";
+            div.style.top = y1 + "px";
+            div.style.left = x1 + "px";
+        }
+        var self = this;
+        $(div)
+                .click(function (e) {
+                    self.editRegion(div.id);
+                })
+        $(div)
+                .mouseenter(function (e) {
+                    self.regionSelected(div.id);
+                    self.positionRegionNameLabel(this);
+                })
+//                .mouseleave(function (e) {
+//                    if ($(e.relatedTarget).closest(self.regionLabelDiv).length === 0) {
+//                        self.regionLabelDiv.style.display = "none";
+//                    }
+//                });
+
+        Polymer.dom(this.$.videoWrapper).appendChild(div);
+    },
+    /**
+     * @method cleanSelectedElements
+     * Removes all borders of regions and disables label buttons
+     */
+    cleanSelectedElements: function () {
+        //Remove selected style
+        var regionCanvases = Polymer.dom(this.root).querySelectorAll('.regionCanvas');
+        for (var i = 0; i < regionCanvases.length; i++) {
+            regionCanvases[i].classList.remove('regionCanvasSelected')
+        }
+        ;
+        //reset
+        this.selectedRegionId = 0;
+        this.optionalTags.toggleEnableButtons(false);
+        this.optionalTags.resetSelected();
+    },
+    showAllRegions: function (playing) {
+        console.log("UDIII show all regions");
+        this.clearFrameElements();//Clear canvas and tags
+        this.cleanSelectedElements();//Clear selected regions
+        var frameIndex = this.currentFrame + 1;
+        var regions = this.frames[frameIndex];
+        var prevRegions = this.frames[frameIndex - 1];
+        if (this.checkRegionsPresence(regions) || playing === true) {
+            //Draw all regions for this frame
+            this.drawAllRegionsOnFrame(this.frames[frameIndex]);
+        } else {
+            if ((!regions || (regions != null && regions != undefined && regions.length == 0)) && this.checkRegionsPresence(prevRegions)) {
+                console.log('copy regions from previous frame');
+                console.log('prev regions: ', prevRegions);
+                var clonedArray = JSON.parse(JSON.stringify(prevRegions));
+                this.frames[frameIndex] = clonedArray;
+                this.emitRegionToHost();
+                setTimeout(this.drawAllRegionsOnFrame(this.frames[frameIndex]), 1000);
+            }
+        }
+    },
+    checkRegionsPresence: function (regions) {
+        return regions && regions.length > 0;
+    },
+    /**
+     * @method drawAllRegionsOnFrame
+     * Draws all regions per current frame.
+     * @params array with regions coordinates.
+     */
+    drawAllRegionsOnFrame: function (regions) {
+        var selected = [];
+        if (!regions) regions = [];
+        for (var i = 0; i < regions.length; i++) {
+            var region = regions[i];
+            //Frame was tagged as empty?
+            if (Object.keys(region).length === 0) {
+                this.indicateEmptyFrame(true);
+                continue;
+            }
+            selected.push(region);
+        }
+        this.drawRegions(selected);
+    },
+    drawRegions: function (regions) {
+        var self = this;
+        regions.forEach(function (region, i) {
+            var widthRatio, heightRatio, x1, x2, y1, y2;
+
+            //Calculate x, y relative to current width and height
+            widthRatio = $('#mainImg').width() / region.width;
+            heightRatio = $('#mainImg').height() / region.height;
+            x1 = (region.x1 * widthRatio);
+            y1 = (region.y1 * heightRatio);
+            x2 = (region.x2 * widthRatio);
+            y2 = (region.y2 * heightRatio);
+
+            self.drawRegion(x1, y1, x2, y2, region.name);
+            //Only 1 region - select it and show tags
+            self.regionSelected(region.name)
+        })
+    },
+    drawAllRegionsExeptEditedOnFrame: function () {
+        var selected = [];
+        var regions = this.frames[this.currentFrame + 1] || [];
+        for (var i = 0; i < regions.length; i++) {
+            if (this.editedRegionId === i) {
+                continue;
+            }
+            var region = regions[i];
+            //Frame was tagged as empty?
+            if (Object.keys(region).length === 0) {
+                this.indicateEmptyFrame(true);
+                continue;
+            }
+            selected.push(region);
+        }
+        this.drawRegions(selected);
+    },
+    /**
+     * @method addRegion
+     * Adds a region to the array of regions per current frame.
+     * @params {x1, y1, x2, y2} region coordinates.
+     */
+    addRegion: function (x1, y1, x2, y2) {
+
+        this.resetEmptyFrame();//Clear empty frame logic
+
+        var region = {};
+        region.x1 = x1;
+        region.y1 = y1;
+        region.x2 = x2;
+        region.y2 = y2;
+        region.width = $('#mainImg').width();
+        region.height = $('#mainImg').height();
+        region.type = this.regiontype;
+        region.tags = [];
+
+        var frameIndex = this.currentFrame + 1;
+        var regions = this.frames[frameIndex];
+        //The array is populated and can contain multiple regions
+        if (this.multiregions == 1 && regions) {
+            region.name = regions.length + 1;
+            this.frames[frameIndex].push(region);
+        }
+        else {//Only one region allowed
+            this.clearFrameElements();
+            region.name = 1;
+            this.frames[frameIndex] = [];
+            this.frames[frameIndex].push(region);
+        }
+
+        return region;
+    },
+    /**
+     * @method drawRegion
+     * Uses HTML5 canvas to draw.
+     * @params {x1, y1, x2, y2} regionname.
+     */
+    drawRegion: function (x1, y1, x2, y2, regionname) {
+
+//        this.ctx.strokeStyle = 'rgb(0,0,0)';
+//        this.ctx.lineWidth = 1;
+//        if (this.regiontype.toLowerCase() === "point") {
+//
+//            var centerOffset = this.regionsize / 2;
+//
+//            this.ctx.beginPath();
+//            this.ctx.moveTo(x1 + centerOffset, y1 + centerOffset);
+//            this.ctx.lineTo(x1 - centerOffset, y1 - centerOffset);
+//            this.ctx.moveTo(x1 + centerOffset, y1 - centerOffset);
+//            this.ctx.lineTo(x1 - centerOffset, y1 + centerOffset);
+//            this.ctx.stroke();
+//            this.ctx.closePath();
+//        }
+//        else if (this.regiontype.toLowerCase() === "rectangle") {
+//            this.ctx.beginPath();
+//            this.ctx.moveTo(x1, y1);
+//            this.ctx.lineTo(x2, y1);
+//            this.ctx.moveTo(x2, y1);
+//            this.ctx.lineTo(x2, y2);
+//            this.ctx.moveTo(x2, y2);
+//            this.ctx.lineTo(x1, y2);
+//            this.ctx.moveTo(x1, y2);
+//            this.ctx.lineTo(x1, y1);
+//            this.ctx.stroke();
+//            this.ctx.closePath();
+//        }
+        this.addDivToRegion(x1, y1, x2, y2, regionname);
+    },
+
+
+    /**
+     * All functions related to frames management
+     *
+     * @method clearFrameElements
+     * Clears all drawings and divs from the video area and resets tag controls.
+     */
+    clearFrameElements: function () {
+
+        //Clear drawings
+        this.ctx.clearRect(0, 0, this.overlay.width, this.overlay.height);
+        //Clear divs
+        $(this.videoWrapper).children(".regionCanvas").remove();
+        //reset tag buttons to not selected
+        this.optionalTags.resetSelected();
+        //hide region number
+        self.regionLabelDiv.style.display = "none";
+        //Clears the empty frame icon
+        this.indicateEmptyFrame(false);
+    },
+    getCurrentFrame: function () {
+        return this.currentFrame;
+        //return this.video.currentTime === 0 ? 1 : Math.round((this.video.currentTime * this.framerate)) + 1;
+    },
+    indicateEmptyFrame: function (selected) {
+        if (selected) {
+            this.emptyFrame.classList.remove("controlOff");
+            this.emptyFrame.classList.add("controlOn");
+        }
+        else {
+            this.emptyFrame.classList.remove("controlOn");
+            this.emptyFrame.classList.add("controlOff");
+        }
+    },
+    /**
+     * @method emptyFrameClicked
+     * Creates an empty region array for the current frame, meaning that the frame is not tagged, but has been reviewed.
+     */
+    emptyFrameClicked: function () {
+        var frameIndex = this.currentFrame + 1;
+        var regions = this.frames[frameIndex];
+        if (!regions || regions.length === 0) {
+            this.frames[frameIndex] = [
+                {}
+            ];
+            this.indicateEmptyFrame(true);
+            this.emitRegionToHost();
+            if (this.lockTagsEnabled) {
+                this.stepFwdClicked();
+            }
+        }
+    },
+    /**
+     * @method resetEmptyFrame
+     * If the frame has been marked as empty - reset that.
+     */
+    resetEmptyFrame: function () {
+        var regions = this.frames[this.currentFrame + 1];
+        //If there is an empty region
+        if (regions && regions.length === 1 && Object.keys(regions[0]).length === 0) {
+            //reset all for this frame
+            this.frames[this.currentFrame + 1] = [];
+            this.clearFrameElements();
+        }
+    },
+
+
+    /**
+     * Video management
+     *
+     */
+    muteClicked: function () {
+        this.mute.classList.toggle("icon-volume-medium", !this.video.muted);
+        this.mute.classList.toggle("icon-volume-mute2", this.video.muted);
+        this.video.muted = !this.video.muted;
+    },
+    /**
+     * Handler for setting the video play speed
+     */
+    playback: function (val, text) {
+        if (val !== null) {
+            this.video.playbackRate = val;
+            this.playbackSpan.innerHTML = text;
+        }
+        this.playSpeedControl.style.display = "none";
+    },
+    /**
+     * Shows the play speed control
+     */
+    playbackSpeedClicked: function () {
+        var offset = $('#playSpeedCell').offset();
+        var top = offset.top - $('#playSpeedControl').height();
+        var left = offset.left + $('#playSpeedCell').width() / 4;
+        $('#playSpeedControl').css({'left': left, 'top': top});
+        this.playSpeedControl.style.display = this.playSpeedControl.style.display === "block" ? "none" : "block";
+    },
+    playPauseClicked: function () {
+        this.video.paused ? this.playState() : this.pauseState();
+    },
+
+    displayFrame: function(frameNum){
+			  console.log("DEBUG: In DisplayFrame. frameNum is ", frameNum );
+				console.log("DEBUG: In DisplayFrame. Max Frames is ", this.framesNum);
+				if( (frameNum >= this.framesNum) || (frameNum < 0) ){
+						console.log("DEBUG: Invalid Frame Number: ", frameNum);
+            return;
+        }
+
+				console.log("DEBUG: In DisplayFrame - FrameNum is ", frameNum);
+
+        // Update frame index
+        this.currentFrame = frameNum;
+        document.getElementById("frameText").innerHTML = (this.currentFrame).toString();
+
+        // Update image
+        this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+				console.log("DEBUG: Img is ", this.img.src );
+
+        // Show regions
+        this.showAllRegions(true);
+    },
+
+    stepFwdClicked: function (playing) {
+        if(playing != true && playing != false){
+            playing = true;
+        }
+
+        if(this.currentFrame + 1 >= this.framesNum){
+            return;
+        }
+        // Update frame index
+        this.currentFrame = this.currentFrame + 1;
+        document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+
+        // Update image
+        this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+
+        // Show regions
+        this.showAllRegions(playing);
+    },
+    stepBwdClicked: function (playing) {
+        if(playing != true && playing != false){
+            playing = true;
+        }
+
+        if(this.currentFrame == 0){
+            return;
+        }
+        // Update frame index
+        this.currentFrame = this.currentFrame - 1;
+        document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+
+        // Update image
+        this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+
+        // Show regions
+        this.showAllRegions(true);
+    },
+    GotSrc: function (newValue, oldValue) {
+        if (newValue != undefined && newValue != null && newValue != "") {
+            // PERCEPTO
+            this.currentFrame = 0;
+            document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+            this.img = this.$$('#mainImg');
+        
+            this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+						console.log("Viewing Debug: Image src is ", this.img.src );
+
+            this.enableAreaSelect(this);
+            this.optionalTags.createTagControls(this.inputtagsarray);
+            this.frames = this.inputframes ? this.inputframes : {};
+            this.showAllRegions(false);
+        }
+    },
+    videoSrcChanged: function (newValue, oldValue) {
+
+        if (this.video) {
+            this.video.src = newValue;
+        }
+    },
+    videoClicked: function (e) {
+        this.cleanSelectedElements();
+        if (this.regiontype.toLowerCase() !== "rectangle") {
+            var rect = this.overlay.getBoundingClientRect();
+            var x1 = (e.clientX - rect.left) / (rect.right - rect.left) * this.overlay.width;
+            var y1 = (e.clientY - rect.top) / (rect.bottom - rect.top) * this.overlay.height;
+            this.createRegion(x1, y1, null, null);
+        }
+    },
+    playState: function () {
+        this.video.play();
+        this.playButton.classList.toggle("icon-pause2", !this.video.paused);
+        //Reset lock tags to off
+        this.lockTagsEnabled = true;
+        this.lockTagsClicked();
+        this.optionalTags.toggleEnableButtons(false);
+        var self = this;
+        this.playing = setInterval(function () {
+            self.playingCallback(true);
+        }, 10);
+    },
+    pauseState: function () {
+        this.video.pause();
+        clearInterval(this.playing);
+        this.stepFwdClicked();
+        this.playButton.classList.toggle("icon-pause2", !this.video.paused);
+        this.optionalTags.toggleEnableButtons(false);
+    },
+    playingCallback: function (playing) {
+
+        this.frameText.innerHTML = this.getCurrentFrame();
+        this.displayVideoTime();
+        if (!this.seeking) {
+            this.updateSeekBar();
+        }
+        this.showAllRegions(playing);
+    },
+    displayVideoTime: function () {
+        var currentTime = Math.round(this.video.currentTime);
+        var remainingtTime = Math.round(this.video.duration - this.video.currentTime);
+
+        //Format using moment.js
+        currentTime = moment().startOf('day').seconds(currentTime).format('HH:mm:ss');
+        remainingtTime = moment().startOf('day').seconds(remainingtTime).format('HH:mm:ss');
+        this.timeSpan.innerHTML = currentTime + "  /  " + remainingtTime;
+    },
+    updateSeekBar: function () {
+        this.seekBar.value = this.video.currentTime;
+        var perc = 100 * this.seekBar.value / this.seekBar.max;
+        this.seekStyle.textContent = '.seek::-webkit-slider-runnable-track{background-size:' + perc + '% 100%}';
+        this.seekStyle.textContent += '.seek::-moz-range-track{background-size:' + perc + '% 100%}';
+    }
+});
+</script>
+<script src="../jquery/dist/jquery.min.js"></script>
+<script src="../moment/moment.js"></script>
+<script src="js/jquery.imgareaselect.js"></script>
+<script src="js/keymaster.js"></script>
+</dom-module>

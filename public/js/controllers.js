@@ -615,7 +615,7 @@ videoTaggingAppControllers
                 url: url,
                 headers: {
                    'x-ms-blob-type': 'BlockBlob',
-                   'x-ms-blob-content-type': file.type
+                   'x-ms-blob-content-type': 'application/octet-stream'
                 },
                 data: file
             }).then(function(response) {
@@ -632,9 +632,17 @@ videoTaggingAppControllers
             var fileUrlsPromises = [];
             for (file in $scope.files){
                 // Get url for upload
-                fileUrlsPromises.push($http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + $scope.files[file].name }).success(function (result) {
+                //fileUrlsPromises.push($http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + $scope.files[file].name }).success(function (result) {
+                fileUrlsPromises.push($http({ method: 'GET', url: '/api/getUploadUrl/' + video_id + "/" + file + ".jpg" }).success(function (result) {
                     console.log("File url is ", result);
-                    filePromises.push(upload($scope.files[result.image_name.split(".")[0]], result.url));
+                    console.log("Scope is ", $scope);
+                    console.log("File is ", $scope.files[file]);
+										console.log("Image Split is ", result.image_name.split(".") );
+										console.log("Image Split first is ", result.image_name.split(".")[0] );
+										console.log("scope files is ", $scope.files );
+										//result.url = '/api/getUploadUrl/' + video_id + "_" + file + ".jpg"; // TODO: Hard-coded (Remove this)
+                    filePromises.push(upload($scope.files[file], result.url));
+                    //filePromises.push(upload($scope.files[result.image_name.split(".")[0]], result.url));
                 }));
             }
             $q.all(fileUrlsPromises).then(function(result){
@@ -701,6 +709,8 @@ videoTaggingAppControllers
         $scope.submitVideo = function () {
             $scope.clearMessages();
             var file = document.getElementById('inputFile').files[0];
+
+					  console.log("DEBUG: Uploading file " + file + "And inputfile is " + inputfile);
 
             $.get('/api/videos/' + $scope.videoId + '/url')
                 .success(function (result) {

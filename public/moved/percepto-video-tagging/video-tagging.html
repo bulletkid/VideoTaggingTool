@@ -4,7 +4,7 @@
 -->
 
 
-<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="video-taggingstyles.html">
 <link rel="import" href="optional-tags.html">
 <link rel="import" href="playback-control.html">
@@ -1053,7 +1053,8 @@ Polymer({
 
         // Update frame index
         this.currentFrame = frameNum;
-        document.getElementById("frameText").innerHTML = (this.currentFrame).toString();
+				displayFrameNumber = this.currentFrame + 1;
+        document.getElementById("frameText").innerHTML = (displayFrameNumber).toString() + "/" + (this.framesNum).toString();
 
         // Update image
         this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
@@ -1073,7 +1074,7 @@ Polymer({
         }
         // Update frame index
         this.currentFrame = this.currentFrame + 1;
-        document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+        document.getElementById("frameText").innerHTML = (this.currentFrame).toString() + "/" + (this.framesNum).toString();
 
         // Update image
         this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
@@ -1103,7 +1104,9 @@ Polymer({
         if (newValue != undefined && newValue != null && newValue != "") {
             // PERCEPTO
             this.currentFrame = 0;
-            document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+						displayFrameNumber = 1;
+            document.getElementById("frameText").innerHTML = (displayFrameNumber).toString() + "/" + (this.framesNum).toString();
+
             this.img = this.$$('#mainImg');
         
             this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
@@ -1175,8 +1178,8 @@ Polymer({
     }
 });
 </script>
-<script src="../jquery/dist/jquery.min.js"></script>
-<script src="../moment/moment.js"></script>
+<script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../../bower_components/moment/moment.js"></script>
 <script src="js/jquery.imgareaselect.js"></script>
 <script src="js/keymaster.js"></script>
 </dom-module>

@@ -1,0 +1,48 @@
+{
+  "name": "percepto-video-tagging",
+  "version": "0.0.46",
+  "authors": [
+    "OzGitele",
+    "sblonder"
+  ],
+  "description": "A conrol for tagging videos.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "momemt",
+    "polymer",
+    "video",
+    "tagging"
+  ],
+  "main": "video-tagging.html",
+  "license": "MIT",
+  "homepage": "https://github.com/perceptoDrones/video-tagging.git",
+  "ignore": [
+    "/.*",
+    "node_modules",
+    "bower_components",
+    "/test/",
+    "/demo/"
+  ],
+  "dependencies": {
+    "moment": "~2.10.6",
+    "polymer": "Polymer/polymer#^1.0.0",
+    "jquery": "~2.0.3"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "web-component-tester": "*"
+  },
+  "resolutions": {
+    "jquery": "~2.2.0"
+  },
+  "_release": "0.0.46",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.0.46",
+    "commit": "72b95bd45c9da522b780de6ce3e04c834e80862d"
+  },
+  "_source": "https://github.com/perceptoDrones/video-tagging.git",
+  "_target": "~0.0.46",
+  "_originalSource": "percepto-video-tagging"
+}

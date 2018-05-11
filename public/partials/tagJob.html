@@ -11,28 +11,6 @@
             </div>
         </div>
 
-        <!--div id="video-tagging">
-            <div id="controlWrapper" class="flexColumn" style="width:640px;" >
-                <div id='videoWrapper' style="position: relative;">
-                    <div id="regionLabelDiv" style="width:40px;height:20px;" class="regionLabel">
-                        <span id="regionLabelSpan" class="regionLabelSpan"></span>
-                        <span id="closeRegionImage" on-click="deleteRegion"
-                              class="closeRegion clickableControl">X</span>
-                    </div>
-                    <canvas id="overlay" class="overlaystyle"
-                            style="width:640px; height: 480px; position: absolute; z-index: 10;">
-                        Your browser does not support the HTML5 canvas location.
-                    </canvas>
-                    <img ng-if="img_src" ng-src="{{ img_src }}" id='mainImg'
-                         style="width:640px; height: 480px; z-index: 1;"/>
-                </div>
-                <div id="videoControls" class="flexRaw" style="justify-content: space-around;">
-                        <div ng-click="change_frame(-1)">backward</div>
-                        <div ng-click="change_frame(1)">forward</div>
-                </div>
-            </div>
-        </div-->
-
         <div class="buttons btn-group" role="group" style="margin-top: 2em;">
             <button ng-hide="!user" ng-click="updateJobStatus('Pending')" type="button" class="btn btn-clear">send for
                 review
@@ -51,7 +29,6 @@
         </div>
 
     </div>
-
 
 </section>
 

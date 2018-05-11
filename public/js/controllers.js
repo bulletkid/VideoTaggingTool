@@ -432,7 +432,33 @@ videoTaggingAppControllers
         var overlay = document.getElementById('overlay');
         ctx = overlay.getContext("2d");
 
+        console.log('Before Listing Frames');
+				// Interjecting API Code
 
+            $scope.ajaxStart();
+            $http({ method: 'GET', url: '/api/videoFrames' })
+                .success(function (result) {
+												
+                    console.log('First Frame => ', result.frames[0]);
+										$scope.videoFrames = [];
+										for (var frame in result.frames) {
+                    	console.log('Next Frame => ', result.frames[frame]['ImageName'] );
+											$scope.videoFrames.push(result.frames[frame]);
+										}
+										//$scope.videoFrames = result.frames;
+                    $scope.showInfo('Listed Frames');
+                    $scope.ajaxCompleted();
+                })
+                .error(function (err) {
+                    console.error(err);
+                    $scope.showError('error listing frames: ' + err.message);
+                    $scope.ajaxCompleted();
+                });
+            
+			  console.log('After listing Frames');
+				console.log("Controller: Scope Video Frames => " , $scope.videoFrames );
+
+				// Actual Code
         $scope.ajaxStart();
         $http({ method: 'GET', url: '/api/jobs/' + jobId })
             .success(function (jobData) {
@@ -450,6 +476,14 @@ videoTaggingAppControllers
 
                 videoCtrl.inputtagsarray = jobData.job.Config.tags;
 
+								videoCtrl.imageFrames = [];
+								if ($scope.videoFrames) {
+                  for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
+													videoCtrl.imageFrames[frameIndex] = $scope.videoFrames[frameIndex]['ImageName'] ;
+													console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
+									}
+								}
+
                 console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
 
                 $scope.total_images_loaded = 0
@@ -458,14 +492,29 @@ videoTaggingAppControllers
                     .success(function (result) {
                         console.log("Got video framessss .... ", result.frames)
                         videoCtrl.inputframes = result.frames;
-                        videoCtrl.videoBaseUrl = jobData.video.Url + "_";
+
+												if ( $scope.videoFrames ) {
+																var lastIndex = jobData.video.Url.lastIndexOf("/");
+																videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex + 1);
+												} else {
+																videoCtrl.videoBaseUrl = jobData.video.Url + "_";
+												}
+
                         $scope.num_of_images = videoCtrl.framesNum
 
                         // Preload images
                         var images = []
                         for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
                             var image = new Image();
-                            image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
+												
+														if ( $scope.videoFrames ) {
+                            	image.src = videoCtrl.videoBaseUrl + $scope.videoFrames[frameIndex]['ImageName'];
+														} else {
+                            	image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
+														}
+
+														console.log("Video Base is " + videoCtrl.videoBaseUrl );
+														console.log("Image src is " + image.src );
                             images.push(image)
                             image.addEventListener('load', function(){
                                 $scope.$apply(function(){
@@ -883,5 +932,27 @@ videoTaggingAppControllers
         $scope.addUser = function () {
             $location.path('/users/0');
         }
+    }])
+
+    ///}]);
+
+    .controller('VideoFramesController', ['$scope', '$route', '$http', '$location', '$routeParams', function ($scope, $route, $http, $location, $routeParams) {
+        var videoFrames = [];
+
+        $scope.ajaxStart();
+        $http({ method: 'GET', url: '/api/videoFrames' })
+            .success(function (result) {
+								console.log("Result is " + result);
+                //videoFrames = $scope.videoFrames = result.videoFrames;
+                $scope.ajaxCompleted();
+            });
+
+//        $scope.editUser = function () {
+//            $location.path('/users/' + this.user.Id);
+//        }
+//
+//        $scope.addUser = function () {
+//            $location.path('/users/0');
+//        }
 
     }]);

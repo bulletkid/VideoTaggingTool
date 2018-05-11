@@ -966,3 +966,45 @@ GO
 
 -- Add First User
 INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('User Name' ,'user@gmail.com' ,2) -- 1 for Editor, 2 for Admin
+
+
+-- Add another table mapping VideoID, FrameNumber and Actual File
+/****** Object:  Table [dbo].[VideoFrames]    Script Date: 1/12/2016 1:42:58 AM ******/
+/** Also need to add Foreign Key constraint Here **/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[VideoFrames](
+	[VideoId] [int] NOT NULL,
+	[FrameId] [int] NOT NULL,
+	[ImageName] [nvarchar](1024) NOT NULL,
+ CONSTRAINT [PK_VideoFrames] PRIMARY KEY CLUSTERED
+(
+	[VideoId] ASC,
+	[FrameId] ASC
+)
+) ON [PRIMARY]
+
+GO
+
+
+/** Procedure **/
+
+/****** Object:  StoredProcedure [dbo].[GetFramesByVideoID] **/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE OR ALTER PROCEDURE [dbo].[GetFramesByVideoID]
+	@videoID int
+AS
+BEGIN
+
+	SELECT *
+	FROM VideoFrames
+	WHERE VideoId = @videoID
+
+END
+
+GO

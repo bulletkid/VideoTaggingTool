@@ -190,6 +190,22 @@ function getJobstatuses(cb) {
     });
 }
 
+
+// START DEBUG
+function getVideoFrames(cb) {
+		console.log("DB Debug: Trying to call the database function");
+    return getDataSets({
+        sproc: 'GetFramesByVideoID',
+        sets: ['videoFrames'],
+        params: [{ name: 'VideoID', type: TYPES.Int, value: 33 }]
+    }, function (err, result) {
+        if (err) return logError(err, cb);
+        return cb(null, result);
+    });
+}
+// END DEBUG
+
+
 function getRoles(cb) {
     return getDataSets({
         sproc: 'GetRoles',
@@ -374,6 +390,7 @@ function getDataSets(opts, cb) {
             for(var i=0; i<columns.length; i++) {
                 rowObj[columns[i].metadata.colName] = columns[i].value;
             }
+						console.log("DATASET: Row is ", rowObj);
             result[sets[currSetIndex]].push(rowObj);
         });
 
@@ -381,8 +398,8 @@ function getDataSets(opts, cb) {
             cb(null, result);
         });
 
+				console.debug("Before Calling Procedure " + request);
         connection.callProcedure(request);
-
     });
 }
 
@@ -461,32 +478,36 @@ function getAllJobs(cb) {
     });
 }
 
-function getVideoFrames(id, cb) {
+function getVideoFramesById(id, cb) {
+		console.log("DB Debug: Trying to call the database function - getVideoFramesById");
     return getDataSets({
-        sproc: 'GetVideoFrames',
+        sproc: 'GetFramesByVideoID',
         sets: ['frames'],
         params: [{name: 'VideoId', type: TYPES.Int, value: id}]
     }, function(err, result){
         if (err) return logError(err, cb);
-
-        var newResult = {
-            frames: []
-        };
-
-        try {
-            for (var i=0; i<result.frames.length; i++) {
-                var frame = normalizeFrameRow(result.frames[i]);
-                newResult.frames.push({
-                    frameIndex: frame.FrameIndex,
-                    frameTags: frame.Tags
-                });
-            }
-        }
-        catch (err) {
-            return logError(err, cb);
-        }
-
-        return cb(null, newResult);
+				console.log("Result is " + result);
+        console.log(result);
+//      return cb(null, result);
+//
+//        var newResult = {
+//            frames: []
+//        };
+//
+//        try {
+//            for (var i=0; i<result.frames.length; i++) {
+//                var frame = normalizeFrameRow(result.frames[i]);
+//                newResult.frames.push({
+//                    frameIndex: frame.FrameIndex,
+//                    frameTags: frame.Tags
+//                });
+//            }
+//        }
+//        catch (err) {
+//            return logError(err, cb);
+//        }
+//
+        return cb(null, result);
     });
 }
 
@@ -590,7 +611,7 @@ module.exports = {
     createOrModifyFrame: createOrModifyFrame,
     getUserJobs: getUserJobs,
     getAllJobs: getAllJobs,
-    getVideoFrames: getVideoFrames,
+    getVideoFramesById: getVideoFramesById,
     getVideoFramesByJob: getVideoFramesByJob,
     getUsers: getUsers,
     getUserByEmail: getUserByEmail,

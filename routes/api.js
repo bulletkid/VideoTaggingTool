@@ -59,6 +59,19 @@ module.exports = function () {
       return res.json({ url: url, image_name: image_id });
     });
     
+
+		// DEBUG START: Start code for fetching video frames
+    router.get('/videoFrames', AdminLoggedIn, function (req, res) { 
+        console.log('API.js: Getting video frames');
+				var id = 33;
+        db.getVideoFramesById(id, function (err, resp) {
+            if (err) return logError(err, res);
+            res.json(resp);
+        });
+    });
+				// DEBUG END - End code for fetching video frames
+
+
     router.post('/videos/:id', AdminLoggedIn, function (req, res) {
       var id = req.params.id;
       console.log('video uploaded', id);

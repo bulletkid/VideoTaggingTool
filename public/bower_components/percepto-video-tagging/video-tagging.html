@@ -111,7 +111,7 @@ Polymer({
     is: 'video-tagging',
 
     properties: {
-
+				imageFrames: Array,
         framerate: Number,
         framesNum: Number,
         videowidth: Number,
@@ -1053,7 +1053,8 @@ Polymer({
 
         // Update frame index
         this.currentFrame = frameNum;
-        document.getElementById("frameText").innerHTML = (this.currentFrame).toString();
+				displayFrameNumber = this.currentFrame + 1;
+        document.getElementById("frameText").innerHTML = (displayFrameNumber).toString() + "/" + (this.framesNum).toString();
 
         // Update image
         this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
@@ -1073,7 +1074,7 @@ Polymer({
         }
         // Update frame index
         this.currentFrame = this.currentFrame + 1;
-        document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+        document.getElementById("frameText").innerHTML = (this.currentFrame).toString() + "/" + (this.framesNum).toString();
 
         // Update image
         this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
@@ -1103,10 +1104,16 @@ Polymer({
         if (newValue != undefined && newValue != null && newValue != "") {
             // PERCEPTO
             this.currentFrame = 0;
-            document.getElementById("frameText").innerHTML = (this.currentFrame).toString()
+						displayFrameNumber = 1;
+            document.getElementById("frameText").innerHTML = (displayFrameNumber).toString() + "/" + (this.framesNum).toString();
+
             this.img = this.$$('#mainImg');
         
-            this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+						console.log("This is ", this);
+						console.log("Base URL is ", this.videoBaseUrl);
+						console.log("ImageFrames is ", this.imageFrames);
+            //this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+            this.img.src = this.videoBaseUrl + this.imageFrames[this.currentFrame];
 						console.log("Viewing Debug: Image src is ", this.img.src );
 
             this.enableAreaSelect(this);

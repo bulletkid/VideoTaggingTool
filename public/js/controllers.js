@@ -430,107 +430,146 @@ videoTaggingAppControllers
         var videoCtrl = document.getElementById('video-tagging');
         var jobId = $routeParams.id;
         var overlay = document.getElementById('overlay');
-        ctx = overlay.getContext("2d");
+        $scope.videoFrames = [];
+        var myVideoFrames = [];
+        //ctx = overlay.getContext("2d");
 
-        console.log('Before Listing Frames');
-				// Interjecting API Code
+                // Interjecting API Code
 
-            $scope.ajaxStart();
-            $http({ method: 'GET', url: '/api/videoFrames' })
-                .success(function (result) {
-												
-                    console.log('First Frame => ', result.frames[0]);
-										$scope.videoFrames = [];
-										for (var frame in result.frames) {
-                    	console.log('Next Frame => ', result.frames[frame]['ImageName'] );
-											$scope.videoFrames.push(result.frames[frame]);
-										}
-										//$scope.videoFrames = result.frames;
-                    $scope.showInfo('Listed Frames');
-                    $scope.ajaxCompleted();
-                })
-                .error(function (err) {
-                    console.error(err);
-                    $scope.showError('error listing frames: ' + err.message);
-                    $scope.ajaxCompleted();
+            var p = new Promise((resolve, reject) => {
+                $scope.ajaxStart();
+                $http({ method: 'GET', url: '/api/jobs/' + jobId })
+                .success(function (jobData) {
+                    $scope.jobData = jobData;
+    
+                    var videoId = jobData.video.Id;
+                    console.log("Before Listing Frames\n");
+                            console.log("Video ID is " +videoId);
+                            console.log("Job ID is " +jobId);
+    
+                    $http({ method: 'GET', url: '/api/videoFrames/' + videoId })
+                        .success(function (result) {
+                                                        
+                            console.log('First Frame => ', result.frames[0]);
+                                                for (var frame in result.frames) {
+                                console.log('Next Frame => ', result.frames[frame]['ImageName'] );
+                                                    $scope.videoFrames.push(result.frames[frame]);
+                                                    myVideoFrames.push(result.frames[frame]);
+                                                }
+                                                //$scope.videoFrames = result.frames;
+                            $scope.showInfo('Listed Frames');
+                            $scope.ajaxCompleted();
+                            resolve();
+                        })
+                        .error(function (err) {
+                            console.error(err);
+                            $scope.showError('error listing frames: ' + err.message);
+                            $scope.ajaxCompleted();
+                            reject(err);
+                        });
                 });
-            
-			  console.log('After listing Frames');
-				console.log("Controller: Scope Video Frames => " , $scope.videoFrames );
-
-				// Actual Code
-        $scope.ajaxStart();
-        $http({ method: 'GET', url: '/api/jobs/' + jobId })
-            .success(function (jobData) {
-                $scope.jobData = jobData;
-                console.log('UDI UDI UDI jobData', jobData);
-//
-                videoCtrl.framesNum = jobData.video.FramesNum;
-                videoCtrl.videowidth = jobData.video.Width;
-                videoCtrl.videoheight = jobData.video.Height;
-                videoCtrl.framerate = jobData.video.FramesPerSecond;
-
-                videoCtrl.regiontype = jobData.job.Config.regiontype;
-                videoCtrl.multiregions = jobData.job.Config.multiregions;
-                videoCtrl.regionsize = jobData.job.Config.regionsize;
-
-                videoCtrl.inputtagsarray = jobData.job.Config.tags;
-
-								videoCtrl.imageFrames = [];
-								if ($scope.videoFrames) {
-                  for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
-													videoCtrl.imageFrames[frameIndex] = $scope.videoFrames[frameIndex]['ImageName'] ;
-													console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
-									}
-								}
-
-                console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
-
-                $scope.total_images_loaded = 0
-
-                $http({ method: 'GET', url: '/api/jobs/' + $routeParams.id + '/frames' })
-                    .success(function (result) {
-                        console.log("Got video framessss .... ", result.frames)
-                        videoCtrl.inputframes = result.frames;
-
-												if ( $scope.videoFrames ) {
-																var lastIndex = jobData.video.Url.lastIndexOf("/");
-																videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex + 1);
-												} else {
-																videoCtrl.videoBaseUrl = jobData.video.Url + "_";
-												}
-
-                        $scope.num_of_images = videoCtrl.framesNum
-
-                        // Preload images
-                        var images = []
-                        for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
-                            var image = new Image();
-												
-														if ( $scope.videoFrames ) {
-                            	image.src = videoCtrl.videoBaseUrl + $scope.videoFrames[frameIndex]['ImageName'];
-														} else {
-                            	image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
-														}
-
-														console.log("Video Base is " + videoCtrl.videoBaseUrl );
-														console.log("Image src is " + image.src );
-                            images.push(image)
-                            image.addEventListener('load', function(){
-                                $scope.$apply(function(){
-                                        $scope.total_images_loaded += 1;
-                                        if ($scope.total_images_loaded == ($scope.num_of_images - 1)){
-                                            console.log("all images loaded... ", image.src, $scope.total_images_loaded);
-                                            $scope.all_images_loaded = true;
-                                        }
-                                    }
-                                )
-
-                            })
-                        }
-                        $scope.ajaxCompleted();
-                    });
             });
+            
+            
+            console.log('After listing Frames');
+            console.log("Controller: Scope Video Frames => " , $scope.videoFrames );
+            console.log("Controller: Scope Video Frames => " , myVideoFrames );
+
+            p.then(() => {
+                $scope.ajaxStart();
+                $http({ method: 'GET', url: '/api/jobs/' + jobId })
+                    .success(function (jobData) {
+                        $scope.jobData = jobData;
+                        console.log('UDI UDI UDI jobData', jobData);
+        
+                        videoCtrl.framesNum = jobData.video.FramesNum;
+                        videoCtrl.videowidth = jobData.video.Width;
+                        videoCtrl.videoheight = jobData.video.Height;
+                        videoCtrl.framerate = jobData.video.FramesPerSecond;
+        
+                        videoCtrl.regiontype = jobData.job.Config.regiontype;
+                        videoCtrl.multiregions = jobData.job.Config.multiregions;
+                        videoCtrl.regionsize = jobData.job.Config.regionsize;
+        
+                        videoCtrl.inputtagsarray = jobData.job.Config.tags;
+        
+                                        videoCtrl.imageFrames = [];
+                                        //if ($scope.videoFrames) {
+                                        if (myVideoFrames) {
+                          for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
+                                                            //var currentFrame = $scope.videoFrames[frameIndex];
+                                                            var currentFrame = myVideoFrames[frameIndex];
+                                                            if (currentFrame) {
+                                                                            videoCtrl.imageFrames[frameIndex] = currentFrame['ImageName'] ;
+                                                                            console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
+                                                            } else {
+                                                                            console.log("Controller: Undefined at index " + frameIndex );
+                                                            }
+                                            }
+                                        }
+        
+                        console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
+        
+                        $scope.total_images_loaded = 0
+        
+                        $http({ method: 'GET', url: '/api/jobs/' + $routeParams.id + '/frames' })
+                            .success(function (result) {
+                                console.log("Got video framessss .... ", result.frames)
+                                videoCtrl.inputframes = result.frames;
+        
+                                                        //if ( $scope.videoFrames ) {
+                                                        if ( myVideoFrames ) {
+                                                                        var lastIndex = jobData.video.Url.lastIndexOf("/");
+                                                                        videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex - 6);
+                                                        } else {
+                                                                        videoCtrl.videoBaseUrl = jobData.video.Url + "_";
+                                                        }
+        
+                                $scope.num_of_images = videoCtrl.framesNum
+        
+                                                        console.log("My Video Frames are " + myVideoFrames);
+                                // Preload images
+        //                        var images = []
+        //                        for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
+        //                            var image = new Image();
+        //												
+        //														//if ( $scope.videoFrames ) {
+        //														if ( myVideoFrames ) {
+        //                            	//image.src = videoCtrl.videoBaseUrl + $scope.videoFrames[frameIndex]['ImageName'];
+        //														  console.log("current img is " + myVideoFrames[frameIndex] );
+        //															if ( myVideoFrames[frameIndex] ) {
+        //                            		image.src = videoCtrl.videoBaseUrl + myVideoFrames[frameIndex]['ImageName'];
+        //															} else {
+        //														  	console.log("ERROR: current img is undefined at index " + frameIndex );
+        //															}
+        //														} else {
+        //	                            	image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
+        //														}
+        //
+        //														//console.log("Video Base is " + videoCtrl.videoBaseUrl );
+        //														console.log("Image src is " + image.src );
+        //                            images.push(image)
+        //                            image.addEventListener('load', function(){
+        //                                $scope.$apply(function(){
+        //                                        $scope.total_images_loaded += 1;
+        //                                        if ($scope.total_images_loaded == ($scope.num_of_images - 1)){
+        //                                            console.log("all images loaded... ", image.src, $scope.total_images_loaded);
+        //                                            $scope.all_images_loaded = true;
+        //                                        }
+        //                                    }
+        //                                )
+        //
+        //                            }) // end image
+        //                        } // end for
+                                $scope.total_images_loaded = $scope.num_of_images - 1;
+                                console.log("all images loaded... ", $scope.total_images_loaded);
+                                $scope.all_images_loaded = true;
+                                $scope.ajaxCompleted();
+                            }); // end get
+                    }); // end get
+            });
+				// Actual Code
+        
 
         $scope.updateJobStatus = function (status) {
             $scope.clearMessages();
@@ -938,9 +977,10 @@ videoTaggingAppControllers
 
     .controller('VideoFramesController', ['$scope', '$route', '$http', '$location', '$routeParams', function ($scope, $route, $http, $location, $routeParams) {
         var videoFrames = [];
+        var jobId = $routeParams.id;
 
         $scope.ajaxStart();
-        $http({ method: 'GET', url: '/api/videoFrames' })
+        $http({ method: 'GET', url: '/api/videoFrames/' + jobId })
             .success(function (result) {
 								console.log("Result is " + result);
                 //videoFrames = $scope.videoFrames = result.videoFrames;

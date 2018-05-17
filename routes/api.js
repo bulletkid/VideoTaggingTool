@@ -61,9 +61,9 @@ module.exports = function () {
     
 
 		// DEBUG START: Start code for fetching video frames
-    router.get('/videoFrames', AdminLoggedIn, function (req, res) { 
+    router.get('/videoFrames/:id', EditorLoggedIn, function (req, res) { 
         console.log('API.js: Getting video frames');
-				var id = 33;
+        var id = req.params.id;
         db.getVideoFramesById(id, function (err, resp) {
             if (err) return logError(err, res);
             res.json(resp);

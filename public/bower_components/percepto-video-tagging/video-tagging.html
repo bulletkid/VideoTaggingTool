@@ -1049,7 +1049,7 @@ Polymer({
             return;
         }
 
-				console.log("DEBUG: In DisplayFrame - FrameNum is ", frameNum);
+				//console.log("DEBUG: In DisplayFrame - FrameNum is ", frameNum);
 
         // Update frame index
         this.currentFrame = frameNum;
@@ -1057,8 +1057,9 @@ Polymer({
         document.getElementById("frameText").innerHTML = (displayFrameNumber).toString() + "/" + (this.framesNum).toString();
 
         // Update image
-        this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
-				console.log("DEBUG: Img is ", this.img.src );
+        //this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
+        this.img.src = this.videoBaseUrl + this.imageFrames[this.currentFrame];
+				console.log("DEBUG: In DisplayFrame - Img is ", this.img.src );
 
         // Show regions
         this.showAllRegions(true);

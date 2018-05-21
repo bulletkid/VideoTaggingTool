@@ -398,7 +398,7 @@ function getDataSets(opts, cb) {
             cb(null, result);
         });
 
-				console.debug("Before Calling Procedure " + request);
+	console.log("Before Calling Procedure " + request);
         connection.callProcedure(request);
     });
 }

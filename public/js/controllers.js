@@ -444,15 +444,15 @@ videoTaggingAppControllers
     
                     var videoId = jobData.video.Id;
                     console.log("Before Listing Frames\n");
-                            console.log("Video ID is " +videoId);
-                            console.log("Job ID is " +jobId);
+                    console.log("Video ID is " +videoId);
+                    console.log("Job ID is " +jobId);
     
                     $http({ method: 'GET', url: '/api/videoFrames/' + videoId })
                         .success(function (result) {
                                                         
                             console.log('First Frame => ', result.frames[0]);
                                                 for (var frame in result.frames) {
-                                console.log('Next Frame => ', result.frames[frame]['ImageName'] );
+                            console.log('Next Frame => ', result.frames[frame]['ImageName'] );
                                                     $scope.videoFrames.push(result.frames[frame]);
                                                     myVideoFrames.push(result.frames[frame]);
                                                 }
@@ -493,20 +493,21 @@ videoTaggingAppControllers
         
                         videoCtrl.inputtagsarray = jobData.job.Config.tags;
         
-                                        videoCtrl.imageFrames = [];
-                                        //if ($scope.videoFrames) {
-                                        if (myVideoFrames) {
-                          for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
-                                                            //var currentFrame = $scope.videoFrames[frameIndex];
-                                                            var currentFrame = myVideoFrames[frameIndex];
-                                                            if (currentFrame) {
-                                                                            videoCtrl.imageFrames[frameIndex] = currentFrame['ImageName'] ;
-                                                                            console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
-                                                            } else {
-                                                                            console.log("Controller: Undefined at index " + frameIndex );
-                                                            }
-                                            }
-                                        }
+                        videoCtrl.imageFrames = [];
+                        //if ($scope.videoFrames) {
+                        if (myVideoFrames) {
+                          	for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
+                            
+																		//var currentFrame = $scope.videoFrames[frameIndex];
+                                    var currentFrame = myVideoFrames[frameIndex];
+                                    if (currentFrame) {
+																						videoCtrl.imageFrames[frameIndex] = currentFrame['ImageName'] ;
+																						console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
+                                    } else {
+																						console.log("Controller: Undefined at index " + frameIndex );
+																		}
+														}
+												}
         
                         console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
         
@@ -517,17 +518,17 @@ videoTaggingAppControllers
                                 console.log("Got video framessss .... ", result.frames)
                                 videoCtrl.inputframes = result.frames;
         
-                                                        //if ( $scope.videoFrames ) {
-                                                        if ( myVideoFrames ) {
-                                                                        var lastIndex = jobData.video.Url.lastIndexOf("/");
-                                                                        videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex - 6);
-                                                        } else {
-                                                                        videoCtrl.videoBaseUrl = jobData.video.Url + "_";
-                                                        }
+                                //if ( $scope.videoFrames ) {
+                                if ( myVideoFrames ) {
+																				var lastIndex = jobData.video.Url.lastIndexOf("/");
+																				videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex - 6);
+                                } else {
+																				videoCtrl.videoBaseUrl = jobData.video.Url + "_";
+                                }
         
                                 $scope.num_of_images = videoCtrl.framesNum
         
-                                                        console.log("My Video Frames are " + myVideoFrames);
+                                console.log("My Video Frames are " + myVideoFrames);
                                 // Preload images
         //                        var images = []
         //                        for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
@@ -570,7 +571,6 @@ videoTaggingAppControllers
             });
 				// Actual Code
         
-
         $scope.updateJobStatus = function (status) {
             $scope.clearMessages();
             var statusId = state.getJobStatusByName()[status];

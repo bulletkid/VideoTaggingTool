@@ -35,10 +35,18 @@
             <table id="videoControlsTable" class="videoControlsTable">
 
                 <tr>
+										<!--
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="prevUntagged" title="Prev Untagged" class="icon-play3 taggingControls"
+                              on-click='playPauseClicked'></span>
+                    </td>
+										-->
+
                     <td class="videoControlCell simpleControl clickableControl">
                         <span id="stepbwd" title="prev" class="icon-backward2 taggingControls"
                               on-click='prevFrameClicked'></span>
                     </td>
+
 										<!--
                     <td class="videoControlCell simpleControl clickableControl">
                         <span id="play-pause" title="play/pause" class="icon-play3 taggingControls"
@@ -56,6 +64,7 @@
                     <td class="videoControlCell frameNumber">
                         <span id='frameText' class="textElements" title="frame#"></span>
                     </td>
+
 										<!--
                     <td class="videoControlCell simpleControl clickableControl">
                         <span id="lastsaved" title="To the last saved frame" class="icon-last taggingControls"
@@ -74,7 +83,7 @@
                     <td class="volumeControlCell longControl">
                         <input id="volumeSlider" class="volume clickableControl" type="range" min=0 max=1 value=.5
                                step=.1 required/>
-                    </td>
+                   </td>
 										-->
                 </tr>
             </table>
@@ -484,7 +493,11 @@ Polymer({
         }
         this.lastSelection = this.currentSelection = null;
         if (this.editedRegionId || this.editedRegionId === 0) {
-            this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.currentFrame + 1][this.editedRegionId]);
+						if (this.frames[this.currentFrame + 1]) {
+            	this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.currentFrame + 1][this.editedRegionId]);
+						} else {
+							console.log("DEBUG: NULL value found at " + (this.currentFrame + 1) );
+						}
         } else {
             this.createRegion(selection.x1, selection.y1, selection.x2, selection.y2);
         }
@@ -588,6 +601,22 @@ Polymer({
             }
         }
     },
+    prevUntaggedClicked: function () {
+        var frameIndex = this.currentFrame;
+				if (frameIndex == 0) {
+					console.log("Already at the first frame");
+					return;
+				}
+
+				for (var i = frameIndex - 1; i >=0; i--) {
+            //The next frame is a first occurence of a frame with no regions
+            if (!this.frames[i] || this.frames[i].length == 0) {
+                this.displayFrame(i - 1);
+                return;
+            }
+        }
+    },
+
     prevFrameClicked: function () {
         var frameIndex = this.currentFrame;
         console.log("PrevFrame Clicked: Previous frame is ", frameIndex );
@@ -654,8 +683,13 @@ Polymer({
         this.optionalTags.resetSelected();
         var regions = this.frames[this.currentFrame + 1];
         if (regions) {
-            var tags = this.frames[this.currentFrame + 1][this.selectedRegionId - 1].tags;
-            this.optionalTags.displaySelectedTags(tags);
+						var selectedFrame = this.frames[this.currentFrame + 1][this.selectedRegionId - 1];
+						if (selectedFrame) {
+	            	var tags = selectedFrame.tags;
+  	          	this.optionalTags.displaySelectedTags(tags);
+						} else {
+								console.debug("Found NULL region at frame " + (this.currentFrame + 1) + " with region ID = " + (this.selectedRegionId - 1) );
+						}
         }
     },
     deleteRegion: function (e) {
@@ -713,16 +747,22 @@ Polymer({
         }
     },
     updateRegion: function (x1, y1, x2, y2, region) {
-        region.x1 = x1;
-        region.y1 = y1;
-        region.x2 = x2;
-        region.y2 = y2;
-        region.width = $('#mainImg').width();
-        region.height = $('#mainImg').height();
-//        this.drawRegion(x1, y1, x2, y2, region.name);//Draw
-        this.showAllRegions(true);
-        this.regionSelected(region.name);//Select it by default
-        this.emitRegionToHost();//Persist
+
+				if (region) {
+								region.x1 = x1;
+								region.y1 = y1;
+								region.x2 = x2;
+								region.y2 = y2;
+								region.width = $('#mainImg').width();
+								region.height = $('#mainImg').height();
+				//        this.drawRegion(x1, y1, x2, y2, region.name);//Draw
+								this.showAllRegions(true);
+								this.regionSelected(region.name);//Select it by default
+								this.emitRegionToHost();//Persist
+				} else {
+								console.log("DEBUG: NULL region found. Ignoring it!");
+								this.showAllRegions(true);
+				}
     },
     /**
      * @method emitRegionToHost

@@ -597,7 +597,7 @@ videoTaggingAppControllers
             msg.tags = inputObject.regions;
             $http({ method: 'POST', url: '/api/jobs/' + jobId + '/frames/' + inputObject.frameIndex, data: msg })
                 .success(function (result) {
-                    console.log('frame saved successfully');
+                    console.log('frame saved successfully for index ' + inputObject.frameIndex);
                     $scope.clearMessages();
                 })
                 .error(function (err) {

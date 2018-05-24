@@ -97,8 +97,10 @@
             <div class="labelControls">
                 <span id="emptyFrame" title="empty frame" class="icon-share taggingControls controlOff"
                       on-click='emptyFrameClicked'></span>
+								<!--
                 <span id="lockTag" title="lock tags" class="icon-pushpin taggingControls lockTag controlOff"
                       on-click='lockTagsClicked'></span>
+								-->
             </div>
             <div style="clear: both">
             </div>
@@ -308,7 +310,8 @@ Polymer({
         this.addEventListener("ontagdeleted", function (e) {
 
             var regionId = this.selectedRegionId - 1;//Revert to zero-based array
-            var region = this.frames[this.currentFrame + 1][regionId];
+            //var region = this.frames[this.currentFrame + 1][regionId];
+            var region = this.frames[this.currentFrame][regionId];
             for (var index = 0; index < region.tags.length; index++) {
                 if (region.tags[index] === e.detail.tagid) {
                     region.tags.splice(index, 1);
@@ -493,8 +496,10 @@ Polymer({
         }
         this.lastSelection = this.currentSelection = null;
         if (this.editedRegionId || this.editedRegionId === 0) {
-						if (this.frames[this.currentFrame + 1]) {
-            	this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.currentFrame + 1][this.editedRegionId]);
+						//if (this.frames[this.currentFrame + 1]) {
+						if (this.frames[this.currentFrame]) {
+            	//this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.currentFrame + 1][this.editedRegionId]);
+            	this.updateRegion(selection.x1, selection.y1, selection.x2, selection.y2, this.frames[this.currentFrame][this.editedRegionId]);
 						} else {
 							console.log("DEBUG: NULL value found at " + (this.currentFrame + 1) );
 						}
@@ -583,7 +588,8 @@ Polymer({
     addTagsToRegion: function (selectedTagsArray) {
 
         var regionId = this.selectedRegionId - 1;//Revert to zero-based array
-        var region = this.frames[this.currentFrame + 1][regionId];
+        //var region = this.frames[this.currentFrame + 1][regionId];
+        var region = this.frames[this.currentFrame][regionId];
         for (var i = 0; i < selectedTagsArray.length; i++) {
 
             region.tags.push(selectedTagsArray[i]);
@@ -593,10 +599,10 @@ Polymer({
 //        var frameIndex = this.currentFrame;
 //        var frames = this.video.duration * this.framerate;
 //        var framesForward = 1;
-        for (var i = 1; i < this.framesNum; i++) {
+        for (var i = 0; i < this.framesNum; i++) {
             //The next frame is a first occurence of a frame with no regions
             if (!this.frames[i] || this.frames[i].length == 0) {
-                this.displayFrame(i - 1);
+                this.displayFrame(i);
                 return;
             }
         }
@@ -618,26 +624,44 @@ Polymer({
     },
 
     prevFrameClicked: function () {
-        var frameIndex = this.currentFrame;
-        console.log("PrevFrame Clicked: Previous frame is ", frameIndex );
-				if (frameIndex != 0) {
-								//frameIndex = frameIndex - 1;
-                this.displayFrame(frameIndex - 1);
-                return;
+				if (this.checkRegionLabels()){
+								var frameIndex = this.currentFrame;
+								console.log("PrevFrame Clicked: Previous frame is ", frameIndex );
+								if (frameIndex != 0) {
+												//frameIndex = frameIndex - 1;
+												this.displayFrame(frameIndex - 1);
+												return;
+								}
 				}
     },
-    nextFrameClicked: function () {
-        var frameIndex = this.currentFrame;
-        console.log("NextFrameClicked: Current frame is ", frameIndex );
-        this.displayFrame(frameIndex + 1);
-//        console.log("Video is ", this.video);
-//        console.log("Total frames are ", this.video.FramesNum );
-//				if (frameIndex + 1 < this.video.framesNum ) {
-//								frameIndex = frameIndex + 1;
-//                this.displayFrame(frameIndex);
-//                return;
-//				}
+		getUnlabeledRegionTags: function(regionId){
+				 console.log("Region ID is " + regionId);
+         var regions = this.frames[regionId];
+				 console.log("Regions are ", regions);
+         var unlabledTags = [];
+						if ( (regions !== undefined) && (regions.length > 0) ){
+            unlabledTags = regions.map(function(region,index){
+                if ( (region.tags) && !region.tags.length > 0) return index + 1;
+         }).filter(Number.isInteger);
+        }
+        return unlabledTags;
     },
+    checkRegionLabels: function(){
+        var unlabledTags = this.getUnlabeledRegionTags(this.getCurrentFrame());
+        if (unlabledTags.length > 0){
+            alert(`Cannot move to the next frame until all tags are labeled. Please label the following tags [${unlabledTags}] on the displayed frame.`);
+            return false;
+        }
+        return true;
+    },
+		nextFrameClicked: function () {
+				if (this.checkRegionLabels()){
+								var frameIndex = this.currentFrame;
+								console.log("NextFrameClicked: Current frame is ", frameIndex );
+								this.displayFrame(frameIndex + 1);
+				}
+    },
+
     lastSavedFrameClicked: function () {
         var frameIndex = this.currentFrame;
         var frames = this.video.duration * this.framerate;
@@ -671,6 +695,7 @@ Polymer({
     },
     regionSelected: function (divId) {
 //        this.cleanSelectedElements();
+				console.log("DIV ID is" + divId );
         var div = document.getElementById(divId);
         div.classList.add("regionCanvasSelected");
         div.classList.remove("greenBorder", "yellowBorder", "redBorder");
@@ -681,20 +706,23 @@ Polymer({
         //Tags - display the tags of the region and enable editing
         this.optionalTags.toggleEnableButtons(true);
         this.optionalTags.resetSelected();
-        var regions = this.frames[this.currentFrame + 1];
+        //var regions = this.frames[this.currentFrame + 1];
+        var regions = this.frames[this.currentFrame];
         if (regions) {
-						var selectedFrame = this.frames[this.currentFrame + 1][this.selectedRegionId - 1];
+						//var selectedFrame = this.frames[this.currentFrame + 1][this.selectedRegionId - 1];
+						var selectedFrame = this.frames[this.currentFrame][this.selectedRegionId - 1];
 						if (selectedFrame) {
 	            	var tags = selectedFrame.tags;
   	          	this.optionalTags.displaySelectedTags(tags);
 						} else {
-								console.debug("Found NULL region at frame " + (this.currentFrame + 1) + " with region ID = " + (this.selectedRegionId - 1) );
+								console.debug("Found NULL region at frame " + (this.currentFrame) + " with region ID = " + (this.selectedRegionId - 1) );
 						}
         }
     },
     deleteRegion: function (e) {
 
-        var regions = this.frames[this.currentFrame + 1];
+        //var regions = this.frames[this.currentFrame + 1];
+        var regions = this.frames[this.currentFrame];
         regions.splice(this.selectedRegionId - 1, 1);
         //Shift array left to cover removed item - Rename all regions which are higher than the deleted one,
         for (var i = 0; i < regions.length; i++) {
@@ -711,7 +739,8 @@ Polymer({
             this.saveCloseSelection();
             this.selectedRegionId = divId;
         }
-        var currentRegion = this.frames[this.currentFrame + 1][divId - 1];
+        //var currentRegion = this.frames[this.currentFrame + 1][divId - 1];
+        var currentRegion = this.frames[this.currentFrame][divId - 1];
         var widthRatio = $('#mainImg').width() / currentRegion.width;
         var heightRatio = $('#mainImg').height() / currentRegion.height;
         this.currentSelection = $('canvas#overlay').imgAreaSelect({
@@ -729,7 +758,8 @@ Polymer({
     hideEditedRegion: function () {
         this.clearFrameElements();//Clear canvas and tags
         this.cleanSelectedElements();//Clear selected regions
-        var frameIndex = this.currentFrame + 1;
+        //var frameIndex = this.currentFrame + 1;
+        var frameIndex = this.currentFrame;// + 1;
         var regions = this.frames[frameIndex];
         var prevRegions = this.frames[frameIndex - 1];
         if (this.checkRegionsPresence(regions) || playing === true) {
@@ -770,7 +800,7 @@ Polymer({
      * The host html page can listen to this event.
      */
     emitRegionToHost: function () {
-        var frameIndex = this.currentFrame + 1;
+        var frameIndex = this.currentFrame;// + 1;
         this.fire('onregionchanged', {frame: {frameIndex: frameIndex, regions: this.frames[frameIndex], editedRegion: this.lastEditedRegion}});
     },
     /**
@@ -835,7 +865,7 @@ Polymer({
         console.log("UDIII show all regions");
         this.clearFrameElements();//Clear canvas and tags
         this.cleanSelectedElements();//Clear selected regions
-        var frameIndex = this.currentFrame + 1;
+        var frameIndex = this.currentFrame;// + 1;
         var regions = this.frames[frameIndex];
         var prevRegions = this.frames[frameIndex - 1];
         if (this.checkRegionsPresence(regions) || playing === true) {
@@ -894,7 +924,8 @@ Polymer({
     },
     drawAllRegionsExeptEditedOnFrame: function () {
         var selected = [];
-        var regions = this.frames[this.currentFrame + 1] || [];
+        //var regions = this.frames[this.currentFrame + 1] || [];
+        var regions = this.frames[this.currentFrame] || [];
         for (var i = 0; i < regions.length; i++) {
             if (this.editedRegionId === i) {
                 continue;
@@ -928,7 +959,8 @@ Polymer({
         region.type = this.regiontype;
         region.tags = [];
 
-        var frameIndex = this.currentFrame + 1;
+        //var frameIndex = this.currentFrame + 1;
+        var frameIndex = this.currentFrame;
         var regions = this.frames[frameIndex];
         //The array is populated and can contain multiple regions
         if (this.multiregions == 1 && regions) {
@@ -1020,29 +1052,34 @@ Polymer({
      * Creates an empty region array for the current frame, meaning that the frame is not tagged, but has been reviewed.
      */
     emptyFrameClicked: function () {
-        var frameIndex = this.currentFrame + 1;
+        //var frameIndex = this.currentFrame + 1;
+        var frameIndex = this.currentFrame;
         var regions = this.frames[frameIndex];
-        if (!regions || regions.length === 0) {
-            this.frames[frameIndex] = [
-                {}
-            ];
-            this.indicateEmptyFrame(true);
+				console.log("DEBUG: Empty this frame!! ", frameIndex, regions);
+        //if (!regions || regions.length === 0) {
+            this.frames[frameIndex] = [];
+            //this.indicateEmptyFrame(true);
             this.emitRegionToHost();
-            if (this.lockTagsEnabled) {
-                this.stepFwdClicked();
-            }
-        }
+
+						// Display the frame again - This time with no tags
+						this.displayFrame(frameIndex);
+            //if (this.lockTagsEnabled) {
+            //    this.stepFwdClicked();
+            //}
+        //}
     },
     /**
      * @method resetEmptyFrame
      * If the frame has been marked as empty - reset that.
      */
     resetEmptyFrame: function () {
-        var regions = this.frames[this.currentFrame + 1];
+        //var regions = this.frames[this.currentFrame + 1];
+        var regions = this.frames[this.currentFrame];
         //If there is an empty region
         if (regions && regions.length === 1 && Object.keys(regions[0]).length === 0) {
             //reset all for this frame
-            this.frames[this.currentFrame + 1] = [];
+            //this.frames[this.currentFrame + 1] = [];
+            this.frames[this.currentFrame] = [];
             this.clearFrameElements();
         }
     },
@@ -1103,6 +1140,8 @@ Polymer({
 
         // Show regions
         this.showAllRegions(true);
+        //this.showAllRegions(false);
+
     },
 
     stepFwdClicked: function (playing) {

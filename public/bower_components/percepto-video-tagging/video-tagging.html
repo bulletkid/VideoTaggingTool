@@ -31,7 +31,7 @@
                      style="width:640px; height: 480px; z-index: 1;"/>
             </div>
         <div id="videoControls" class="videoControls">
-            <input id="seekBar" class="seek clickableControl" type="range" min='0' value="0" step="any" required/>
+								<!-- <input id="seekBar" class="seek clickableControl" type="range" min='0' value="0" step="any" required/> -->
             <table id="videoControlsTable" class="videoControlsTable">
 
                 <tr>
@@ -57,12 +57,12 @@
                         <span id="stepfwd" title="next" class="icon-forward3 taggingControls"
                               on-click='nextFrameClicked'></span>
                     </td>
+                    <td class="videoControlCell frameNumber">
+                        <span id='frameText' class="textElements" title="frame#"></span>
+                    </td>
                     <td class="videoControlCell simpleControl clickableControl">
                         <span id="nextuntagged" title="first untagged frame" class="icon-next2 taggingControls"
                               on-click='nextUntaggedClicked'></span>
-                    </td>
-                    <td class="videoControlCell frameNumber">
-                        <span id='frameText' class="textElements" title="frame#"></span>
                     </td>
 
 										<!--
@@ -95,7 +95,7 @@
                 </div>
             </div>
             <div class="labelControls">
-                <span id="emptyFrame" title="empty frame" class="icon-share taggingControls controlOff"
+                <span id="emptyFrame" title="Clear all existing tags in this picture" class="icon-share taggingControls controlOff"
                       on-click='emptyFrameClicked'></span>
 								<!--
                 <span id="lockTag" title="lock tags" class="icon-pushpin taggingControls lockTag controlOff"
@@ -108,12 +108,14 @@
         </div>
     </div>
 
+		<!--
     <div class="color-controls">
         <h4>Selected region color:</h4>
         <a href="javascript:void(0)" class="btn btn-success" on-click="setGreenBorders">Green</a>
         <a href="javascript:void(0)" class="btn btn-warning" on-click="setYellowBorders">Yellow</a>
         <a href="javascript:void(0)" class="btn btn-danger" on-click="setRedBorders">Red</a>
     </div>
+		-->
 </template>
 <script>
 
@@ -599,13 +601,15 @@ Polymer({
 //        var frameIndex = this.currentFrame;
 //        var frames = this.video.duration * this.framerate;
 //        var framesForward = 1;
-        for (var i = 0; i < this.framesNum; i++) {
-            //The next frame is a first occurence of a frame with no regions
-            if (!this.frames[i] || this.frames[i].length == 0) {
-                this.displayFrame(i);
-                return;
-            }
-        }
+				if (this.checkRegionLabels()){
+								for (var i = 0; i < this.framesNum; i++) {
+										//The next frame is a first occurence of a frame with no regions
+										if (!this.frames[i] || this.frames[i].length == 0) {
+												this.displayFrame(i);
+												return;
+										}
+								}
+				}
     },
     prevUntaggedClicked: function () {
         var frameIndex = this.currentFrame;

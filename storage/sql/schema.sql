@@ -964,10 +964,6 @@ INSERT INTO [dbo].[JobStatus] ([Id] ,[Name] ,[Description]) VALUES (3 ,'Approved
 GO
 
 
--- Add First User
-INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('User Name' ,'user@gmail.com' ,2) -- 1 for Editor, 2 for Admin
-
-
 -- Add another table mapping VideoID, FrameNumber and Actual File
 /****** Object:  Table [dbo].[VideoFrames]    Script Date: 1/12/2016 1:42:58 AM ******/
 /** Also need to add Foreign Key constraint Here **/
@@ -1008,3 +1004,11 @@ BEGIN
 END
 
 GO
+
+-- Add First User
+INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('Manu Anand' ,'manu.anand@gmail.com' ,2) -- 1 for Editor, 2 for Admin
+INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('MineTester 001' ,'minetester001@gmail.com' ,1) -- 1 for Editor, 2 for Admin
+INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('MineTester 002' ,'minetester002@gmail.com' ,1) -- 1 for Editor, 2 for Admin
+INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('Mine Tester 003' ,'minetester003@gmail.com' ,1) -- 1 for Editor, 2 for Admin
+
+

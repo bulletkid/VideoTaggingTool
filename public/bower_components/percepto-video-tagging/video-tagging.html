@@ -61,7 +61,11 @@
                         <span id='frameText' class="textElements" title="frame#"></span>
                     </td>
                     <td class="videoControlCell simpleControl clickableControl">
-                        <span id="nextuntagged" title="first untagged frame" class="icon-next2 taggingControls"
+                        <span id="prevuntagged" title="prev untagged frame" class="icon-arrow-left taggingControls"
+                              on-click='prevUntaggedClicked'></span>
+                    </td>
+                    <td class="videoControlCell simpleControl clickableControl">
+                        <span id="nextuntagged" title="next untagged frame" class="icon-arrow-right taggingControls"
                               on-click='nextUntaggedClicked'></span>
                     </td>
 
@@ -125,6 +129,7 @@ Polymer({
 
     properties: {
 				imageFrames: Array,
+				sasToken: String,
         framerate: Number,
         framesNum: Number,
         videowidth: Number,
@@ -151,7 +156,7 @@ Polymer({
          * keyboard shortcuts managing:
          * see: https://github.com/madrobby/keymaster
          */
-        this.keyboardControl = window.key.noConflict();
+        //this.keyboardControl = window.key.noConflict();
 
         this.frames = {}; // Holds the data of the tagged frames, their regions and tags
         this.seeking = false;//Flag for enabling control over the seek bar while the video is playing, see playingCallback function
@@ -159,7 +164,8 @@ Polymer({
         this.lockTagsEnabled = false;
         this.selectedTags = [];
 
-        this.borderColor = 'red';
+        //this.borderColor = 'red';
+        this.borderColor = 'green';
 
         //Divs and spans
         this.controlWrapper = this.$$('#controlWrapper');
@@ -455,6 +461,8 @@ Polymer({
         });
         if (this.regiontype.toLowerCase() === "rectangle") {
 
+						console.log("Self value is " + self)
+
             $('canvas#overlay').imgAreaSelect({
                 disable: false, //enable/disable
                 handles: true, //grab handles when selecting the area
@@ -536,7 +544,7 @@ Polymer({
         this.updateExistingBorders(this.borderColor);
     },
     setRedBorders: function () {
-        this.borderColor = 'red';
+        this.borderColor = 'green';
         this.updateExistingBorders(this.borderColor);
     },
 
@@ -598,11 +606,16 @@ Polymer({
         }
     },
     nextUntaggedClicked: function () {
-//        var frameIndex = this.currentFrame;
+        var frameIndex = this.currentFrame;
 //        var frames = this.video.duration * this.framerate;
 //        var framesForward = 1;
+				if (frameIndex == this.framesNum) {
+					console.log("Already on last frame");
+					return;
+				}
+
 				if (this.checkRegionLabels()){
-								for (var i = 0; i < this.framesNum; i++) {
+								for (var i = frameIndex + 1; i < this.framesNum; i++) {
 										//The next frame is a first occurence of a frame with no regions
 										if (!this.frames[i] || this.frames[i].length == 0) {
 												this.displayFrame(i);
@@ -618,19 +631,21 @@ Polymer({
 					return;
 				}
 
-				for (var i = frameIndex - 1; i >=0; i--) {
-            //The next frame is a first occurence of a frame with no regions
-            if (!this.frames[i] || this.frames[i].length == 0) {
-                this.displayFrame(i - 1);
-                return;
-            }
-        }
+				if (this.checkRegionLabels()){
+								for (var i = frameIndex - 1; i >=0; i--) {
+										//The next frame is a first occurence of a frame with no regions
+										if (!this.frames[i] || this.frames[i].length == 0) {
+												this.displayFrame(i);
+												return;
+										}
+								}
+				}
     },
 
     prevFrameClicked: function () {
 				if (this.checkRegionLabels()){
 								var frameIndex = this.currentFrame;
-								console.log("PrevFrame Clicked: Previous frame is ", frameIndex );
+								//console.log("PrevFrame Clicked: Previous frame is ", frameIndex );
 								if (frameIndex != 0) {
 												//frameIndex = frameIndex - 1;
 												this.displayFrame(frameIndex - 1);
@@ -639,9 +654,9 @@ Polymer({
 				}
     },
 		getUnlabeledRegionTags: function(regionId){
-				 console.log("Region ID is " + regionId);
+				 //console.log("Region ID is " + regionId);
          var regions = this.frames[regionId];
-				 console.log("Regions are ", regions);
+				 //console.log("Regions are ", regions);
          var unlabledTags = [];
 						if ( (regions !== undefined) && (regions.length > 0) ){
             unlabledTags = regions.map(function(region,index){
@@ -661,7 +676,7 @@ Polymer({
 		nextFrameClicked: function () {
 				if (this.checkRegionLabels()){
 								var frameIndex = this.currentFrame;
-								console.log("NextFrameClicked: Current frame is ", frameIndex );
+								//console.log("NextFrameClicked: Current frame is ", frameIndex );
 								this.displayFrame(frameIndex + 1);
 				}
     },
@@ -699,7 +714,7 @@ Polymer({
     },
     regionSelected: function (divId) {
 //        this.cleanSelectedElements();
-				console.log("DIV ID is" + divId );
+				//console.log("DIV ID is" + divId );
         var div = document.getElementById(divId);
         div.classList.add("regionCanvasSelected");
         div.classList.remove("greenBorder", "yellowBorder", "redBorder");
@@ -771,8 +786,8 @@ Polymer({
             this.drawAllRegionsExeptEditedOnFrame();
         } else {
             if (!regions && this.checkRegionsPresence(prevRegions)) {
-                console.log('copy regions from previous frame');
-                console.log('prev regions: ', prevRegions);
+                //console.log('copy regions from previous frame');
+                //console.log('prev regions: ', prevRegions);
                 var clonedArray = JSON.parse(JSON.stringify(prevRegions));
                 this.frames[frameIndex] = clonedArray;
                 this.emitRegionToHost();
@@ -1059,7 +1074,7 @@ Polymer({
         //var frameIndex = this.currentFrame + 1;
         var frameIndex = this.currentFrame;
         var regions = this.frames[frameIndex];
-				console.log("DEBUG: Empty this frame!! ", frameIndex, regions);
+				//console.log("DEBUG: Empty this frame!! ", frameIndex, regions);
         //if (!regions || regions.length === 0) {
             this.frames[frameIndex] = [];
             //this.indicateEmptyFrame(true);
@@ -1123,8 +1138,8 @@ Polymer({
     },
 
     displayFrame: function(frameNum){
-			  console.log("DEBUG: In DisplayFrame. frameNum is ", frameNum );
-				console.log("DEBUG: In DisplayFrame. Max Frames is ", this.framesNum);
+			  //console.log("DEBUG: In DisplayFrame. frameNum is ", frameNum );
+				//console.log("DEBUG: In DisplayFrame. Max Frames is ", this.framesNum);
 				if( (frameNum >= this.framesNum) || (frameNum < 0) ){
 						console.log("DEBUG: Invalid Frame Number: ", frameNum);
             return;
@@ -1140,7 +1155,7 @@ Polymer({
         // Update image
         //this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
         this.img.src = this.videoBaseUrl + this.imageFrames[this.currentFrame];
-				console.log("DEBUG: In DisplayFrame - Img is ", this.img.src );
+				//console.log("DEBUG: In DisplayFrame - Img is ", this.img.src );
 
         // Show regions
         this.showAllRegions(true);
@@ -1193,9 +1208,9 @@ Polymer({
 
             this.img = this.$$('#mainImg');
         
-						console.log("This is ", this);
-						console.log("Base URL is ", this.videoBaseUrl);
-						console.log("ImageFrames is ", this.imageFrames);
+						//console.log("This is ", this);
+						//console.log("Base URL is ", this.videoBaseUrl);
+						//console.log("ImageFrames is ", this.imageFrames);
             //this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
             this.img.src = this.videoBaseUrl + this.imageFrames[this.currentFrame];
 						console.log("Viewing Debug: Image src is ", this.img.src );
@@ -1270,4 +1285,12 @@ Polymer({
 <script src="../moment/moment.js"></script>
 <script src="js/jquery.imgareaselect.js"></script>
 <script src="js/keymaster.js"></script>
+
+<style>
+.imgareaselect-outer {
+	background-color: transparent; 
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+}
+</style>
 </dom-module>

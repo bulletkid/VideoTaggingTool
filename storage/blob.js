@@ -3,7 +3,7 @@ var config = require('../config');
 var url = require('url');
 
 var CONTAINER_NAME = 'videos';
-var URL_FORMAT = 'http://<storage-account-name>.blob.core.windows.net/<container-name>'
+var URL_FORMAT = 'https://<storage-account-name>.blob.core.windows.net/<container-name>'
     .replace('<storage-account-name>', config.storage.account)
     .replace('<container-name>', CONTAINER_NAME);
 

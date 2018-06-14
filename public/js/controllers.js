@@ -1,4 +1,6 @@
-﻿// Comment for deploy
+﻿//var blob = require('../../storage/blob');
+
+// Comment for deploy
 var videoTaggingAppControllers = angular.module('videoTaggingAppControllers', []);
 
 videoTaggingAppControllers
@@ -450,14 +452,15 @@ videoTaggingAppControllers
                     $http({ method: 'GET', url: '/api/videoFrames/' + videoId })
                         .success(function (result) {
                                                         
-                            console.log('First Frame => ', result.frames[0]);
-                                                for (var frame in result.frames) {
-                            console.log('Next Frame => ', result.frames[frame]['ImageName'] );
-                                                    $scope.videoFrames.push(result.frames[frame]);
-                                                    myVideoFrames.push(result.frames[frame]);
-                                                }
-                                                //$scope.videoFrames = result.frames;
-                            $scope.showInfo('Listed Frames');
+                            //console.log('First Frame => ', result.frames[0]);
+                            for (var frame in result.frames) {
+															//console.log('Next Frame => ', result.frames[frame]['ImageName'] );
+                              $scope.videoFrames.push(result.frames[frame]);
+                              myVideoFrames.push(result.frames[frame]);
+                            }
+																
+                            //$scope.videoFrames = result.frames;
+                            //$scope.showInfo('Listed Frames');
                             $scope.ajaxCompleted();
                             resolve();
                         })
@@ -471,9 +474,9 @@ videoTaggingAppControllers
             });
             
             
-            console.log('After listing Frames');
-            console.log("Controller: Scope Video Frames => " , $scope.videoFrames );
-            console.log("Controller: Scope Video Frames => " , myVideoFrames );
+            //console.log('After listing Frames');
+            //console.log("Controller: Scope Video Frames => " , $scope.videoFrames );
+            //console.log("Controller: Scope Video Frames => " , myVideoFrames );
 
             p.then(() => {
                 $scope.ajaxStart();
@@ -481,6 +484,7 @@ videoTaggingAppControllers
                     .success(function (jobData) {
                         $scope.jobData = jobData;
                         console.log('UDI UDI UDI jobData', jobData);
+
         
                         videoCtrl.framesNum = jobData.video.FramesNum;
                         videoCtrl.videowidth = jobData.video.Width;
@@ -496,26 +500,38 @@ videoTaggingAppControllers
                         videoCtrl.imageFrames = [];
                         //if ($scope.videoFrames) {
                         if (myVideoFrames) {
-                          	for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
+																
+//													// Get token
+//													 var folderName = myVideoFrames[0].split('/')
+//
+//														var token = '?';
+//														if ( folderName[0] ) {
+//												    	//token = '?' + blob.getSAS({ name: folderName[0], permissions: azure.BlobUtilities.SharedAccessPermissions.READ});
+//															console.log("\n******Token is " + token + "\n\n");
+//														}
+
+														for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
                             
 																		//var currentFrame = $scope.videoFrames[frameIndex];
                                     var currentFrame = myVideoFrames[frameIndex];
                                     if (currentFrame) {
-																						videoCtrl.imageFrames[frameIndex] = currentFrame['ImageName'] ;
-																						console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
+																						// TODO: This will be read from configuration next
+																						//videoCtrl.imageFrames[frameIndex] = currentFrame['ImageName'] + token;
+																						videoCtrl.imageFrames[frameIndex] = currentFrame['ImageName'];
+																						//console.log("Controller: Adding image to ctrl " + videoCtrl.imageFrames[frameIndex] );
                                     } else {
 																						console.log("Controller: Undefined at index " + frameIndex );
 																		}
 														}
 												}
         
-                        console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
+                        //console.log("storage suffix from controller is ", videoCtrl.storageSuffix)
         
                         $scope.total_images_loaded = 0
         
                         $http({ method: 'GET', url: '/api/jobs/' + $routeParams.id + '/frames' })
                             .success(function (result) {
-                                console.log("Got video framessss .... ", result.frames)
+                                console.log("Got video framessss .... "); //result.frames)
                                 videoCtrl.inputframes = result.frames;
         
                                 //if ( $scope.videoFrames ) {
@@ -528,7 +544,7 @@ videoTaggingAppControllers
         
                                 $scope.num_of_images = videoCtrl.framesNum
         
-                                console.log("My Video Frames are " + myVideoFrames);
+                                //console.log("My Video Frames are " + myVideoFrames);
                                 // Preload images
         //                        var images = []
         //                        for(var frameIndex=0; frameIndex < videoCtrl.framesNum; frameIndex++){
@@ -536,15 +552,15 @@ videoTaggingAppControllers
         //												
         //														//if ( $scope.videoFrames ) {
         //														if ( myVideoFrames ) {
-        //                            	//image.src = videoCtrl.videoBaseUrl + $scope.videoFrames[frameIndex]['ImageName'];
-        //														  console.log("current img is " + myVideoFrames[frameIndex] );
+        //															//image.src = videoCtrl.videoBaseUrl + $scope.videoFrames[frameIndex]['ImageName'];
+        //															console.log("current img is " + myVideoFrames[frameIndex] );
         //															if ( myVideoFrames[frameIndex] ) {
-        //                            		image.src = videoCtrl.videoBaseUrl + myVideoFrames[frameIndex]['ImageName'];
+        //																image.src = videoCtrl.videoBaseUrl + myVideoFrames[frameIndex]['ImageName'];
         //															} else {
-        //														  	console.log("ERROR: current img is undefined at index " + frameIndex );
+        //																console.log("ERROR: current img is undefined at index " + frameIndex );
         //															}
         //														} else {
-        //	                            	image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
+        //																image.src = videoCtrl.videoBaseUrl + (frameIndex).toString() + ".jpg";
         //														}
         //
         //														//console.log("Video Base is " + videoCtrl.videoBaseUrl );
@@ -798,7 +814,7 @@ videoTaggingAppControllers
             $scope.clearMessages();
             var file = document.getElementById('inputFile').files[0];
 
-					  console.log("DEBUG: Uploading file " + file + "And inputfile is " + inputfile);
+						console.log("DEBUG: Uploading file " + file + "And inputfile is " + inputfile);
 
             $.get('/api/videos/' + $scope.videoId + '/url')
                 .success(function (result) {

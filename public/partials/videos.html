@@ -1,7 +1,7 @@
 ﻿
 <section ng-controller="VideosController">
     <div id="videos">
-        <h1>videos <img src="../images/ajax-loader.gif" ng-show='ajax'></h1>
+        <h1>image batches<img src="../images/ajax-loader.gif" ng-show='ajax'></h1>
 
         <div class="Container">
             <div class="row" style="margin-bottom:2em">
@@ -33,10 +33,12 @@
                         <th>action</th>
                         <th>id</th>
                         <th>title</th>
+												<!--
                         <th>width</th>
                         <th>height</th>
                         <th nowrap>duration (secs)</th>
                         <th>FPS</th>
+												-->
                         <th>labels</th>
                         <th>download</th>
                     </tr>
@@ -53,10 +55,12 @@
                             <a ng-show="video.VideoUploaded" href="{{ video.Url }}" target="_blank">{{ video.Name }}</a>
                             <span ng-show="!video.VideoUploaded">{{ video.Name }}</span>
                         </td>
+												<!--
                         <td>{{ video.Width }}</td>
                         <td>{{ video.Height }}</td>
-                        <!--td>{{ video.DurationSeconds.toFixed(2)}}</td-->
+                        <td>{{ video.DurationSeconds.toFixed(2)}}</td>
                         <td>{{ video.FramesPerSecond.toFixed(2) }}</td>
+												-->
                         <td>
                             <span ng-repeat="label in video.Labels">
                                     <span class="label label-default">{{ label }}</span>

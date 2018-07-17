@@ -59,18 +59,43 @@ module.exports = function () {
       return res.json({ url: url, image_name: image_id });
     });
     
-
-		// DEBUG START: Start code for fetching video frames
     router.get('/videoFrames/:id', EditorLoggedIn, function (req, res) { 
         console.log('API.js: Getting video frames');
+
+				// TODO: Debug why this isn't working
+				//var token = db.getSASFromBlob();
+        //console.log("Token is " +token);
+
         var id = req.params.id;
         db.getVideoFramesById(id, function (err, resp) {
             if (err) return logError(err, res);
             res.json(resp);
         });
     });
-				// DEBUG END - End code for fetching video frames
 
+		// DEBUG START: Start code for fetching frame operations
+    router.get('/frameOperations/:jobId/:frameIndex', EditorLoggedIn, function (req, res) { 
+        console.log('API.js: Getting frame operations for job ' + req.params.jobId + " and frame index " + req.params.frameIndex);
+
+				var jobId = req.params.jobId;
+        var frameIndex = req.params.frameIndex;
+        db.getFrameOperations(jobId, frameIndex, function (err, resp) {
+            if (err) return logError(err, res);
+            res.json(resp);
+        });
+    });
+				// DEBUG END - End code for fetching frame operations
+
+    router.post('/frameOperations/:jobId/:frameIndex/:comments', EditorLoggedIn, function (req, res) { 
+				var jobId = req.params.jobId;
+        var frameIndex = req.params.frameIndex;
+        var comments = req.params.comments;
+        console.log('Saving comment for ' + jobId + " and frameIndex " +frameIndex + " and comments are " + comments);
+        db.updateFrameComments(jobId, frameIndex, comments, function (err, resp) {
+            if (err) return logError(err, res);
+            res.json(resp);
+        });
+    });
 
     router.post('/videos/:id', AdminLoggedIn, function (req, res) {
       var id = req.params.id;

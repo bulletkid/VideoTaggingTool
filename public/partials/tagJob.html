@@ -11,7 +11,15 @@
             </div>
         </div>
 
+
+				<div>
+					<h4> Comments </h4>
+					<!--<input type="text" id="comments" ng-value="Hello World" size="140" /> -->
+					<input type="text" id="comments" placeholder="Any other comments about the image?" size="140" />
+				</div>
         <div class="buttons btn-group" role="group" style="margin-top: 2em;">
+								<!--<button ng-hide="!user" type="submit" class="btn btn-clear">Save Comment</button> -->
+						<button ng-hide="!user" ng-click="updateFrameComment('XXXXX')" type="button" class="btn btn-clear">Save Comment</button>
             <button ng-hide="!user" ng-click="updateJobStatus('Pending')" type="button" class="btn btn-clear">send for
                 review
             </button>

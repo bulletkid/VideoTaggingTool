@@ -8,6 +8,7 @@
 <link rel="import" href="video-taggingstyles.html">
 <link rel="import" href="optional-tags.html">
 <link rel="import" href="playback-control.html">
+<script src="../../../storage/blob.js"></script>
 
 <dom-module id="video-tagging">
 <template>
@@ -16,7 +17,7 @@
     <link rel="stylesheet" href="css/imgareaselect-animated.css"/>
     <link rel="stylesheet" href="assets/icons/style.css">
     <div>
-        <div id="controlWrapper" class="flexColumn" style="width:640px;" >
+        <div id="controlWrapper" class="flexColumn" style="width:1024px;" >
             <div id='videoWrapper' style="position: relative;">
                 <div id="regionLabelDiv" style="width:40px;height:20px;" class="regionLabel">
                     <span id="regionLabelSpan" class="regionLabelSpan"></span>
@@ -24,11 +25,11 @@
                           class="closeRegion clickableControl">X</span>
                 </div>
                 <canvas id="overlay" class="overlaystyle"
-                        style="width:640px; height: 480px; position: absolute; z-index: 10;">
+                        style="width:1024px; height: 768px; position: absolute; z-index: 10;">
                     Your browser does not support the HTML5 canvas location.
                 </canvas>
                 <img id='mainImg'
-                     style="width:640px; height: 480px; z-index: 1;"/>
+                     style="width:1024px; height: 768px; z-index: 1;"/>
             </div>
         <div id="videoControls" class="videoControls">
 								<!-- <input id="seekBar" class="seek clickableControl" type="range" min='0' value="0" step="any" required/> -->
@@ -111,7 +112,7 @@
         </div>
         </div>
     </div>
-
+		
 		<!--
     <div class="color-controls">
         <h4>Selected region color:</h4>
@@ -129,6 +130,7 @@ Polymer({
 
     properties: {
 				imageFrames: Array,
+				jobId: Number,
 				sasToken: String,
         framerate: Number,
         framesNum: Number,
@@ -820,7 +822,7 @@ Polymer({
      */
     emitRegionToHost: function () {
         var frameIndex = this.currentFrame;// + 1;
-        this.fire('onregionchanged', {frame: {frameIndex: frameIndex, regions: this.frames[frameIndex], editedRegion: this.lastEditedRegion}});
+        this.fire('onregionchanged', {frame: {frameIndex: frameIndex, regions: this.frames[frameIndex], editedRegion: this.lastEditedRegion, comments: 'Hello World'}});
     },
     /**
      * @method addDivToRegion
@@ -1137,6 +1139,10 @@ Polymer({
         this.video.paused ? this.playState() : this.pauseState();
     },
 
+		getFrameComment : function() {
+        this.fire('getComment');
+    },
+
     displayFrame: function(frameNum){
 			  //console.log("DEBUG: In DisplayFrame. frameNum is ", frameNum );
 				//console.log("DEBUG: In DisplayFrame. Max Frames is ", this.framesNum);
@@ -1161,8 +1167,11 @@ Polymer({
         this.showAllRegions(true);
         //this.showAllRegions(false);
 
+				console.log("Calling getFrameComment()\n");
+				this.getFrameComment();
+				//document.getElementById("comments").value = 'Hey Hey!!';
     },
-
+    
     stepFwdClicked: function (playing) {
         if(playing != true && playing != false){
             playing = true;
@@ -1208,17 +1217,21 @@ Polymer({
 
             this.img = this.$$('#mainImg');
         
-						//console.log("This is ", this);
-						//console.log("Base URL is ", this.videoBaseUrl);
-						//console.log("ImageFrames is ", this.imageFrames);
+						console.log("This is ", this);
+						console.log("Base URL is ", this.videoBaseUrl);
+						console.log("ImageFrames is ", this.imageFrames);
             //this.img.src = this.videoBaseUrl + (this.currentFrame).toString() + ".jpg"; ///+ this.storageSuffix;
             this.img.src = this.videoBaseUrl + this.imageFrames[this.currentFrame];
 						console.log("Viewing Debug: Image src is ", this.img.src );
+
+						//var sasToken = getSAS();
+						//console.log("SAS Token is ", sasToken);
 
             this.enableAreaSelect(this);
             this.optionalTags.createTagControls(this.inputtagsarray);
             this.frames = this.inputframes ? this.inputframes : {};
             this.showAllRegions(false);
+						this.getFrameComment();
         }
     },
     videoSrcChanged: function (newValue, oldValue) {

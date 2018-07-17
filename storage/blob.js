@@ -2,7 +2,7 @@
 var config = require('../config');
 var url = require('url');
 
-var CONTAINER_NAME = 'videos';
+var CONTAINER_NAME = 'demo';
 var URL_FORMAT = 'https://<storage-account-name>.blob.core.windows.net/<container-name>'
     .replace('<storage-account-name>', config.storage.account)
     .replace('<container-name>', CONTAINER_NAME);
@@ -50,7 +50,8 @@ function upload(opts, cb) {
 
 function getSAS(opts) {
 
-  var permissions = opts.permissions || azure.BlobUtilities.SharedAccessPermissions.READ;
+  //var permissions = opts.permissions || azure.BlobUtilities.SharedAccessPermissions.READ;
+  var permissions = azure.BlobUtilities.SharedAccessPermissions.READ;
   var startDate = new Date();
   var expiryDate = new Date(startDate);
   expiryDate.setMinutes(startDate.getMinutes() + 30);
@@ -63,7 +64,8 @@ function getSAS(opts) {
           Expiry: expiryDate
       }
   };
-  var sasToken = blobSvc.generateSharedAccessSignature(CONTAINER_NAME, opts.name + '', sharedAccessPolicy);
+  //var sasToken = blobSvc.generateSharedAccessSignature(CONTAINER_NAME, opts.name + '', sharedAccessPolicy);
+  var sasToken = blobSvc.generateSharedAccessSignature('https://mineimagetagger.blob.core.windows.net/', 'demo', sharedAccessPolicy);
   console.log('sasToken', sasToken);
   return sasToken;
 }
@@ -99,6 +101,7 @@ module.exports = {
     upload: upload,
     getVideoStream: getVideoStream,
     getVideoUrlWithSas: getVideoUrlWithSas,
-    getVideoUrlWithSasWrite: getVideoUrlWithSasWrite
+    getVideoUrlWithSasWrite: getVideoUrlWithSasWrite,
+		getSAS : getSAS
 };
 

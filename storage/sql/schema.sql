@@ -1005,6 +1005,77 @@ END
 
 GO
 
+/** New Table **/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[FrameOperations](
+	[JobId] [int] NOT NULL,
+	[FrameIndex] [bigint] NOT NULL,
+	[Comments] [ntext] NULL,
+ CONSTRAINT [PK_FrameOperations] PRIMARY KEY CLUSTERED
+(
+	[JobId] ASC,
+	[FrameIndex] ASC
+)
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+/** Procedure **/
+/****** Object:  StoredProcedure [dbo].[GetFrameOperations] **/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE OR ALTER PROCEDURE [dbo].[GetFrameOperations]
+	@jobId int = -1,
+	@frameIndex int = -1
+AS
+BEGIN
+
+	SELECT *
+	FROM FrameOperations
+	WHERE JobId = @jobID AND FrameIndex = @frameIndex
+
+END
+
+GO
+
+//
+/****** Object:  StoredProcedure [dbo].[UpsertJob]    Script Date: 1/12/2016 1:42:58 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE or ALTER PROCEDURE [dbo].[UpsertFrameComment]
+	@JobId int,
+	@FrameIndex int,
+	@FrameComment nvarchar(1024),
+	@Comments ntext OUTPUT
+	
+AS
+  BEGIN
+      -- SET NOCOUNT ON added to prevent extra result sets from
+      SET NOCOUNT ON;
+
+		  IF EXISTS (SELECT * FROM  FrameOperations WHERE  JobId= @JobId AND FrameIndex = @FrameIndex)
+			UPDATE FrameOperations
+			SET  Comments = @FrameComment
+			WHERE JobId= @JobId AND FrameIndex = @FrameIndex;
+
+		  ELSE
+			INSERT INTO FrameOperations VALUES  (@JobId, @FrameIndex, @FrameComment)
+
+	   SET @Comments = (SELECT Comments FROM FrameOperations WHERE JobId= @JobId AND FrameIndex = @FrameIndex)
+END
+
+//
+
+
+
 -- Add First User
 INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('Manu Anand' ,'manu.anand@gmail.com' ,2) -- 1 for Editor, 2 for Admin
 INSERT INTO [dbo].[Users] ([Name] ,[Email] ,[RoleId]) VALUES ('MineTester 001' ,'minetester001@gmail.com' ,1) -- 1 for Editor, 2 for Admin

@@ -436,7 +436,7 @@ videoTaggingAppControllers
         var myVideoFrames = [];
         //ctx = overlay.getContext("2d");
 
-                // Interjecting API Code
+            // Interjecting API Code
 
             var p = new Promise((resolve, reject) => {
                 $scope.ajaxStart();
@@ -452,7 +452,7 @@ videoTaggingAppControllers
                     $http({ method: 'GET', url: '/api/videoFrames/' + videoId })
                         .success(function (result) {
                                                         
-                            //console.log('First Frame => ', result.frames[0]);
+                            console.log('First Frame => ', result.frames[0]);
                             for (var frame in result.frames) {
 															//console.log('Next Frame => ', result.frames[frame]['ImageName'] );
                               $scope.videoFrames.push(result.frames[frame]);
@@ -485,7 +485,7 @@ videoTaggingAppControllers
                         $scope.jobData = jobData;
                         console.log('UDI UDI UDI jobData', jobData);
 
-        
+												videoCtrl.jobId = jobId;
                         videoCtrl.framesNum = jobData.video.FramesNum;
                         videoCtrl.videowidth = jobData.video.Width;
                         videoCtrl.videoheight = jobData.video.Height;
@@ -536,8 +536,18 @@ videoTaggingAppControllers
         
                                 //if ( $scope.videoFrames ) {
                                 if ( myVideoFrames ) {
-																				var lastIndex = jobData.video.Url.lastIndexOf("/");
-																				videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex - 6);
+																				console.log("DEBUG: Jobdata is " + jobData );
+																				var lastIndex = jobData.video.Url.lastIndexOf("core.windows.net/");
+																				if (lastIndex != -1) {
+																					lastIndex += 17;
+																					var tempPath = jobData.video.Url.substring(0, lastIndex );
+																					videoCtrl.videoBaseUrl = tempPath;
+																					//videoCtrl.videoBaseUrl = jobData.video.Url.substring(0, lastIndex - 6);
+																					console.log("DEBUG: Original Jobdata Video URL is " + jobData.video.Url );
+																					console.log("DEBUG: modified Jobdata Video URL is " + videoCtrl.videoBaseUrl );
+																					//console.log("DEBUG: Temp Base Video URL is " + tempPath + ":");
+																				}
+
                                 } else {
 																				videoCtrl.videoBaseUrl = jobData.video.Url + "_";
                                 }
@@ -587,6 +597,34 @@ videoTaggingAppControllers
             });
 				// Actual Code
         
+        $scope.submit = function () {
+
+            $scope.clearMessages();
+
+            if (!$scope.comments) return $scope.showError('comments were not provided');
+						console.log("Frame Comment is " + $scope.comments);
+						console.log("Frame ID is " + videoCtrl.currentFrame);
+						console.log("Job ID  is " + jobId);
+
+						// Get current job comments
+						$http({ method: 'GET', url: '/api/frameOperations/' + jobID + '/' + videoCtrl.currentFrame })
+								.success(function (result) {
+																								
+										console.log('First Frame => ', result.frameOperations[0]);
+
+										//for (var frame in result.frames) {
+											//console.log('Next Frame => ', result.frames[frame]['ImageName'] );
+										//}
+												
+										$scope.ajaxCompleted();
+								})
+								.error(function (err) {
+										console.error(err);
+										$scope.showError('error listing frame comments : ' + err.message);
+										$scope.ajaxCompleted();
+								});
+        }
+
         $scope.updateJobStatus = function (status) {
             $scope.clearMessages();
             var statusId = state.getJobStatusByName()[status];
@@ -606,8 +644,57 @@ videoTaggingAppControllers
                 });
         }
 
+        $scope.updateFrameComment = function (statusX) {
+            $scope.clearMessages();
+						var status2 = document.getElementById("comments").value;
+						console.log("Frame Comment is " + status2 );
+						console.log("Frame ID is " + videoCtrl.currentFrame);
+						console.log("Job ID  is " + jobId);
+
+						// Get current job comments
+						$http({ method: 'POST', url: '/api/frameOperations/' + jobId + '/' + videoCtrl.currentFrame + '/' + status2})
+								.success(function (result) {
+																								
+										//console.log('First Frame => ', result.frameOperations[0]);
+										//document.getElementById("comments").value = result.frameOperations[0]['Comments'];
+                    $scope.showInfo('Comment saved successfully');
+										$scope.ajaxCompleted();
+								})
+								.error(function (err) {
+										console.error(err);
+										//$scope.showError('error listing frame comments : ' + err.message);
+										$scope.showError('error listing frame comments : ' + err);
+										$scope.ajaxCompleted();
+								});
+        }
+
+        function getFrameComment() {
+            $scope.clearMessages();
+						console.log("Frame ID is " + videoCtrl.currentFrame);
+						console.log("Job ID  is " + jobId);
+
+						// Get current job comments
+						$http({ method: 'GET', url: '/api/frameOperations/' + jobId + '/' + videoCtrl.currentFrame })
+								.success(function (result) {
+																								
+										if (result.frameOperations[0]) {
+														console.log('First Frame => ', result.frameOperations[0]);
+														document.getElementById("comments").value = result.frameOperations[0]['Comments'];
+										} else {
+														document.getElementById("comments").value = 'Any other comments about the image?';
+										}
+
+										$scope.ajaxCompleted();
+								})
+								.error(function (err) {
+										console.error(err);
+										$scope.showError('error listing frame comments : ' + err.message);
+										$scope.ajaxCompleted();
+								});
+        }
+
         function tagHandler(e) {
-            console.log('handler called ', e);
+            console.log('handler called ', e.detail);
             var inputObject = e.detail.frame;
             var msg = {};
             msg.tags = inputObject.regions;
@@ -627,6 +714,7 @@ videoTaggingAppControllers
                 });
         }
 
+        videoCtrl.addEventListener('getComment', getFrameComment);
         videoCtrl.addEventListener('onregionchanged', tagHandler);
 
         $scope.change_frame = function(step){

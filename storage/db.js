@@ -33,6 +33,10 @@ function normalizeVideoRow(video) {
     return video;
 }
 
+function getSASFromBlob() {
+	return blob.getSAS();
+}
+
 function normalizeFrameRow(frame) {
     if(frame.TagsJson)
         frame.Tags = JSON.parse(frame.TagsJson);
@@ -191,7 +195,6 @@ function getJobstatuses(cb) {
 }
 
 
-// START DEBUG
 function getVideoFrames(cb) {
 		console.log("DB Debug: Trying to call the database function");
     return getDataSets({
@@ -203,8 +206,59 @@ function getVideoFrames(cb) {
         return cb(null, result);
     });
 }
-// END DEBUG
 
+function getFrameOperations(jobId, frameIndex, cb) {
+		console.log("DB Debug: Trying to call the database function - getFrameOperations with jobID " + jobId + " and frameIndex = " +frameIndex);
+    return getDataSets({
+        sproc: 'GetFrameOperations',
+        sets: ['frameOperations'],
+        params: [{name: 'jobId', type: TYPES.Int, value: jobId}, {name: 'frameIndex', type: TYPES.Int, value: frameIndex}]
+    }, function(err, result){
+        if (err) return logError(err, cb);
+				console.log("Result is " + result);
+        console.log(result);
+        return cb(null, result);
+    });
+}
+
+// START DEBUG
+function updateFrameComments(jobId, frameIndex, comments, cb) {
+		console.log("DB Debug: Trying to call the database function - updateFrameComments");
+    connect(function(err, connection){
+        if (err) return logError(err, cb);
+
+        try
+        {
+            var resultComments;
+
+            var request = new tedious.Request('UpsertFrameComment', function(err) {
+                if (err && err.number == DBErrors.duplicate) return logError(new Error('Error updating comments'), cb);
+                if (err) return logError(err, cb);
+
+                return cb(null, {Comments: resultComments});
+            });
+
+            request.addParameter('JobId', TYPES.Int, jobId);
+            request.addParameter('FrameIndex', TYPES.Int, frameIndex);
+            request.addParameter('FrameComment', TYPES.NVarChar, comments);
+            request.addOutputParameter('Comments', TYPES.NVarChar);
+        		console.log('DB Debug: Calling proccedure with job ' + jobId + " and frameIndex " +frameIndex + " and comments are " + comments);
+
+            request.on('returnValue', function(parameterName, value, metadata) {
+                if (parameterName == 'Comments') {
+                    resultComments = value;
+                }
+            });
+
+            connection.callProcedure(request);
+        }
+        catch(err) {
+            return logError(err, cb);
+        }
+
+    });
+}
+// END DEBUG
 
 function getRoles(cb) {
     return getDataSets({
@@ -390,7 +444,7 @@ function getDataSets(opts, cb) {
             for(var i=0; i<columns.length; i++) {
                 rowObj[columns[i].metadata.colName] = columns[i].value;
             }
-						console.log("DATASET: Row is ", rowObj);
+						//console.log("DATASET: Row is ", rowObj);
             result[sets[currSetIndex]].push(rowObj);
         });
 
@@ -417,6 +471,9 @@ function createOrModifyFrame(req, cb) {
             request.addParameter('JobId', TYPES.Int, req.jobId);
             request.addParameter('FrameIndex', TYPES.BigInt, req.frameIndex);
             request.addParameter('TagsJson', TYPES.NVarChar, JSON.stringify(req.tagsJson));
+
+						// Debug: Change stuff here
+						console.log("DB: JSON tags are " + JSON.stringify(req.tagsJson));
 
             connection.callProcedure(request);
         }
@@ -620,5 +677,8 @@ module.exports = {
     updateJobStatus: updateJobStatus,
     updateVideoUploaded: updateVideoUploaded,
     getLabels : getLabels,
-    getVideos : getVideos
+    getVideos : getVideos,
+		getSASFromBlob : getSASFromBlob,
+		getFrameOperations : getFrameOperations,
+		updateFrameComments : updateFrameComments
 }

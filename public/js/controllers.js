@@ -1,4 +1,4 @@
-﻿//var blob = require('../../storage/blob');
+//var blob = require('../../storage/blob');
 
 // Comment for deploy
 var videoTaggingAppControllers = angular.module('videoTaggingAppControllers', []);
@@ -681,7 +681,7 @@ videoTaggingAppControllers
 														console.log('First Frame => ', result.frameOperations[0]);
 														document.getElementById("comments").value = result.frameOperations[0]['Comments'];
 										} else {
-														document.getElementById("comments").value = 'Any other comments about the image?';
+														document.getElementById("comments").value = '';
 										}
 
 										$scope.ajaxCompleted();

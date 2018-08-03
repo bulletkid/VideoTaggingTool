@@ -173,6 +173,24 @@ videoTaggingAppControllers
             var jobId = this.job.JobId;
             $location.path('/jobs/' + jobId + '/tag');
         }
+
+        $scope.download = function () {
+            var jobId = this.job.JobId;
+						console.log("\nDownload fxn called for job" +jobId );
+            var url = '/api/jobs/' + jobId + '/framesOperations';
+            window.open(url, '_blank');
+
+//						// Start HTTP
+//            $scope.ajaxStart();
+//            $http({ method: 'GET', url: '/api/jobs/' + jobId + '/framesOperations'})
+//                .success(function (result) {
+//                    console.log('jobData', result);
+//                    $scope.ajaxCompleted();
+//                });
+		
+						// End HTTP
+
+        }
     }])
 
     .controller('UpsertJobController', ['$scope', '$http', '$location', '$routeParams', 'state', function ($scope, $http, $location, $routeParams, state) {
@@ -597,33 +615,33 @@ videoTaggingAppControllers
             });
 				// Actual Code
         
-        $scope.submit = function () {
-
-            $scope.clearMessages();
-
-            if (!$scope.comments) return $scope.showError('comments were not provided');
-						console.log("Frame Comment is " + $scope.comments);
-						console.log("Frame ID is " + videoCtrl.currentFrame);
-						console.log("Job ID  is " + jobId);
-
-						// Get current job comments
-						$http({ method: 'GET', url: '/api/frameOperations/' + jobID + '/' + videoCtrl.currentFrame })
-								.success(function (result) {
-																								
-										console.log('First Frame => ', result.frameOperations[0]);
-
-										//for (var frame in result.frames) {
-											//console.log('Next Frame => ', result.frames[frame]['ImageName'] );
-										//}
-												
-										$scope.ajaxCompleted();
-								})
-								.error(function (err) {
-										console.error(err);
-										$scope.showError('error listing frame comments : ' + err.message);
-										$scope.ajaxCompleted();
-								});
-        }
+//        $scope.submit = function () {
+//
+//            $scope.clearMessages();
+//
+//            if (!$scope.comments) return $scope.showError('comments were not provided');
+//						console.log("Frame Comment is " + $scope.comments);
+//						console.log("Frame ID is " + videoCtrl.currentFrame);
+//						console.log("Job ID  is " + jobId);
+//
+//						// Get current job comments
+//						$http({ method: 'GET', url: '/api/frameOperations/' + jobID + '/' + videoCtrl.currentFrame })
+//								.success(function (result) {
+//																								
+//										console.log('First Frame => ', result.frameOperations[0]);
+//
+//										//for (var frame in result.frames) {
+//											//console.log('Next Frame => ', result.frames[frame]['ImageName'] );
+//										//}
+//												
+//										$scope.ajaxCompleted();
+//								})
+//								.error(function (err) {
+//										console.error(err);
+//										$scope.showError('error listing frame comments : ' + err.message);
+//										$scope.ajaxCompleted();
+//								});
+//        }
 
         $scope.updateJobStatus = function (status) {
             $scope.clearMessages();
@@ -643,6 +661,64 @@ videoTaggingAppControllers
                     $scope.ajaxCompleted();
                 });
         }
+
+        $scope.submit = function () {
+
+						var frm = document.getElementById("tagForm");
+            $scope.clearMessages();
+
+            $scope.ajaxStart();
+						var status2 = document.getElementById("comments").value;
+						console.log("Frame Comment is " + status2 );
+						//console.log("Frame ID is " + videoCtrl.currentFrame);
+						//console.log("Job ID  is " + jobId);
+
+						// Get current job comments
+						$http({ method: 'POST', url: '/api/frameOperations/' + jobId + '/' + videoCtrl.currentFrame + '/' + status2})
+								.success(function (result) {
+																								
+										//console.log('First Frame => ', result.frameOperations[0]);
+										//document.getElementById("comments").value = result.frameOperations[0]['Comments'];
+                    $scope.showInfo('Comment saved successfully');
+										$scope.ajaxCompleted();
+								})
+								.error(function (err) {
+										console.error(err);
+										//$scope.showError('error listing frame comments : ' + err.message);
+										$scope.showError('error listing frame comments : ' + err);
+										$scope.ajaxCompleted();
+								});
+
+            console.log( "Scope is ", $scope );
+            console.log( "frm is ", frm);
+            console.log( "frm2 is ", $scope.inputdata );
+
+				// Reset the form model.
+				//$scope.comments = {};
+				// Set back to pristine.
+				$scope.inputdata.$setPristine();
+				// Since Angular 1.3, set back to untouched state.
+				$scope.inputdata.$setUntouched();
+
+						//frm.$setPristine(); 
+						//frm.$setUntouched();
+
+						//frm.$setPristine();
+						//$scope.inputdata.$setSubmitted(false);
+						//$scope.inputdata.$setPristine(true);
+						//$scope.inputdata.$setUntouched(true);
+            //console.log( "frm2 - Take 2 is ", $scope.inputdata );
+
+						//$scope.inputdata.$setSubmitted(false);
+						//frm.setPristine();
+						//frm.reset();
+						//return false;
+        }
+
+
+				$scope.resetForm = function() {
+					//$scope.inputdata = {};
+				}
 
         $scope.updateFrameComment = function (statusX) {
             $scope.clearMessages();

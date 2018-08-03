@@ -1073,7 +1073,18 @@ AS
 END
 
 //
+CREATE or ALTER PROCEDURE [dbo].[GetFrameTagsAndComments]
+	@JobId int
+	
+AS
+  BEGIN
+	  SELECT f.JobId, f.FrameIndex, f.TagsJson, fo.Comments
+  FROM [dbo].[Frames] f 
+  LEFT JOIN [dbo].[FrameOperations] fo
+    ON f.JobId = fo.JobId AND f.FrameIndex = fo.FrameIndex 
+  WHERE f.JobId = @JobId
 
+END
 
 
 -- Add First User

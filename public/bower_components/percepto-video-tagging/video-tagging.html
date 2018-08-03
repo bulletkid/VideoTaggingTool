@@ -158,7 +158,7 @@ Polymer({
          * keyboard shortcuts managing:
          * see: https://github.com/madrobby/keymaster
          */
-        //this.keyboardControl = window.key.noConflict();
+        this.keyboardControl = window.key.noConflict();
 
         this.frames = {}; // Holds the data of the tagged frames, their regions and tags
         this.seeking = false;//Flag for enabling control over the seek bar while the video is playing, see playingCallback function
@@ -224,11 +224,13 @@ Polymer({
                 }
                 if (!to_ignore) {
                     self.clearArea();
-                    self.stepFwdClicked(!event.shiftKey);
+										self.nextFrameClicked();
+                    //self.stepFwdClicked(!event.shiftKey);
                 }
             }
         });
         this.keyboardControl('left, shift+left', function (event, handler) {
+            console.log("key left!!1 ", self.currentSelection)
             var pressedKeys = self.keyboardControl.getPressedKeyCodes();
             var to_ignore = false
             if(self.currentSelection == null){
@@ -239,7 +241,8 @@ Polymer({
                 }
                 if (!to_ignore) {
                     self.clearArea();
-                    self.stepBwdClicked(true); //never copy rec backwards...
+										self.prevFrameClicked();
+                    //self.stepBwdClicked(true); //never copy rec backwards...
                 }
             }
         });

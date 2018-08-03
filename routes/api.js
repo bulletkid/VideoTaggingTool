@@ -1,4 +1,4 @@
-﻿var express = require('express');
+var express = require('express');
 var router = express.Router();
 var multiparty = require('multiparty');
 var path = require('path');
@@ -50,6 +50,17 @@ module.exports = function () {
       var url = blob.getVideoUrlWithSasWrite(id);
       return res.json({ url: url });
     });
+
+		// DEBUG START
+    router.get('/jobs/:id/framesOperations', EditorLoggedIn, function (req, res) { 
+      var jobId = req.params.id;
+      console.log('getting tags for job', jobId);
+      db.getFrameTagsAndComments(jobId, function (err, resp) {
+            if (err) return logError(err, res);
+            res.json(resp);
+        });
+    });
+		// DEBUG END
 
     router.get('/getUploadUrl/:video_id/:image_id', AdminLoggedIn, function (req, res) {
       var video_id = req.params.video_id;

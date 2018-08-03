@@ -194,6 +194,22 @@ function getJobstatuses(cb) {
     });
 }
 
+/// DEBUG START
+function getFrameTagsAndComments(jobId, cb) {
+		console.log("DB Debug: Trying to call the database function - getFrameCommentsAndTags");
+    return getDataSets({
+        sproc: 'GetFrameTagsAndComments',
+        sets: ['framesTagsAndComments'],
+        params: [{name: 'JobId', type: TYPES.Int, value: jobId}]
+    }, function(err, result){
+        if (err) return logError(err, cb);
+				console.log("Result is " + result);
+        console.log(result);
+        return cb(null, result);
+    });
+}
+
+/// DEBUG END
 
 function getVideoFrames(cb) {
 		console.log("DB Debug: Trying to call the database function");
@@ -680,5 +696,6 @@ module.exports = {
     getVideos : getVideos,
 		getSASFromBlob : getSASFromBlob,
 		getFrameOperations : getFrameOperations,
-		updateFrameComments : updateFrameComments
+		updateFrameComments : updateFrameComments,
+		getFrameTagsAndComments : getFrameTagsAndComments 
 }

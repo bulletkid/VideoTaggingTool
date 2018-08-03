@@ -32,6 +32,7 @@
                     <th>owner</th>
                     <th>approved</th>
                     <th>video</th>
+                    <th>download</th>
                     <th nowrap>settings</th>
                 </tr>
             </thead>
@@ -49,6 +50,7 @@
                     <td>{{ job.UserName }}</td>
                     <td>{{ job.ReviewedByName }}</td>
                     <td>{{ job.VideoName }}</td>
+                    <td><span ng-click="download()" class="glyphicon glyphicon-download"></span></td>
                     <!--<td>{{ job.Config && job.Config.labels && job.Config.labels.join(',') }}</td> -->
                     <td>
                         <span class="glyphicon" ng-class="{'glyphicon glyphicon-resize-small' : this.toggle, 'glyphicon glyphicon-resize-full': !this.toggle}" ng-click="this.toggle = !this.toggle" title="job settings"></span>
